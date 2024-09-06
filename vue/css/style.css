@@ -1,0 +1,13 @@
+body {
+  /*background-color: rgb(30, 30, 30); #F5FCFF;*/
+  background-color: #F5FCFF;
+  color: rgb(30, 30, 30);
+  }
+	
+	.hoverTable tr:hover {
+	  background-color: yellow;
+	  cursor : pointer;
+	}
+
+
+
