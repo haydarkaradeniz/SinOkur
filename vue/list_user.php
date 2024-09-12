@@ -1,7 +1,7 @@
 <?php
-$servername = "localhost";
+$servername = "localhost:3306";
 $username = "root";
-$password = "admin";
+$password = "q1w2e3r4";
 $database = "ccsowner";
 
 // Bağlantı oluşturma

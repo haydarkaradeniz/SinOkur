@@ -5,29 +5,16 @@ const app = Vue.createApp({
     return {
       apiKey: "apikey 4rmqruXG0tfPrDPWGcN2ZM:3Bf9phydrqtDp44KzC4kdu",
       userList : {
-        watched: [
-          {
-            "imdbID": "tt1375666",
-            "Poster": "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
-            "Title": "Inception",
-            "Year": "2010",
-            "Runtime": "148 min",
-            "imdbRating": "8.8",
-            "imdbVotes": "2,581,982",
-            "Director": "Christopher Nolan",
-            "Writer": "Christopher Nolan",
-            "Actors": "Leonardo DiCaprio, Joseph Gordon-Levitt, Elliot Page",
-            "userScore": undefined,
-            "forumVoteCount":5,
-            "forumScore":7.9,
-          }
-  
-        ],
-        notWatched: []
+        watched: [],
+        notWatched: [],
+        favoriteMovies : [],
+        favoriteSeries: [],
       },     
       userListFilter: {
         watched: "",
-        notWatched: ""
+        notWatched: "",
+        favoriteMovies: "",
+        favoriteSeries: "",
       },
       userListInfo : {
         watched: {
@@ -35,6 +22,12 @@ const app = Vue.createApp({
         },
         notWatched: {
           header:"İzleyeceklerim",
+        },
+        favoriteMovies: {
+          header:"Favori Filmlerim",
+        },
+        favoriteSeries: {
+          header:"Favori Dizilerim",
         }
       },
       searchBox: {
@@ -57,41 +50,35 @@ const app = Vue.createApp({
         hoverScore: 0,
         movie:undefined,
       },
-      allowOtherUser:false,
       loadingBox: {
         visible: false,
         title: "",
       },
       mainRowWidth:0,
-      friendList : [
-        {
-          user_id:"2",
-          username:"svsknr",
-          user_lastvisit:"1725628618",
-
-        },
-        {
-          user_id:"3",
-          username:"gezgins",         
-
-        },
-
-      ],
       profile : {
-        loginId: "60",   
-        userId: "2",
+        avatar:"",
+        email:"",
+        letterboxd:"",
+        username:"",
+        website:"",
+        loginId: "",   
+        userId: "",
         guestMode: false,
-      }
+        allowOtherUser:false,
+      },      
+      friendList : [],
         
-      
+  
     };
   },
   mounted() {    
    //not yet implemented
-    //TODO
-   this.allowOtherUser = true;
+   this.getSessionUser();
    this.mainRowWidth = document.getElementById('mainRow').getBoundingClientRect().width;
    console.log(Object.keys(this.userListInfo));
+   this.refresh();
+
+
   },
   created() {
     window.addEventListener("resize",this.resizeEventHandler);
@@ -101,6 +88,94 @@ const app = Vue.createApp({
   },
 
   methods: {
+
+    refresh() {
+      this.fillProfileData();
+      this.fillMovieListData();
+    },
+
+    getSessionUser() {
+      var fd = new FormData();  
+      axios.post('services/getSessionUser.php', fd).then(
+        resp => {	
+          this.profile.userId = resp.data.userId;
+          this.profile.loginId = resp.data.userId;
+          }
+        ).catch((err) => {
+          console.error(err);
+          this.profile.userId = 61;
+          this.profile.loginId = 61;
+        }
+      );
+    },
+      
+
+    fillMovieListData() {
+      var fd = new FormData();  
+      fd.append('userId', this.profile.userId);
+      axios.post('services/getMovieListData.php', fd).then(
+        resp => {	
+          console.log("haydar" + resp);
+          for(var i=0; i<Object.keys(this.userListInfo).length; i++) {
+            this.userList[Object.keys(this.userListInfo)[i]] = [];
+          }
+          for(var i=0; i<resp.data.userMovieList.length; i++) {
+            var movieData = resp.data.userMovieList[i];
+
+            var data = {
+              "imdbID": movieData.movieId,
+              "Poster": movieData.poster,
+              "Title": movieData.title,
+              "Year": movieData.year,
+              "Runtime": movieData.runtime,
+              "imdbRating": movieData.imdbRating,
+              "imdbVotes" : movieData.imdbVotes,
+              "Director" : movieData.director,
+              "Writer": movieData.writer,
+              "Actors": movieData.actors,
+              "userScore": movieData.userRating,
+              "forumVoteCount" : movieData.forumVoteCount,
+              "forumScore" : movieData.forumScore,
+            }
+            this.userList[movieData.listId].push(data);
+          }
+        }
+      );	
+
+
+    },
+
+    fillProfileData() {
+      var fd = new FormData();  
+      fd.append('userId', this.profile.userId);
+      axios.post('services/getUserData.php', fd).then(
+        resp => {	
+          this.profile.avatar = resp.data.userData.avatar;
+          this.profile.email = resp.data.userData.email;
+          this.profile.letterboxd = resp.data.userData.letterboxd;
+          this.profile.username = resp.data.userData.username;
+          this.profile.website = resp.data.userData.website;
+          this.profile.allowOtherUser = resp.data.userData.publicprofile && resp.data.userData.publicprofile == 0 ? false:true;
+          var friends = resp.data.userData.friends;
+          this.friendList = [];
+          for(var i=0; i<friends.length; i++) {
+            this.friendList.push( {
+              "user_id":friends[i].user_id,
+              "username":friends[i].username,
+              "user_lastvisit":friends[i].lastvisit
+            });
+          }
+        }
+      ).catch((err) => {
+        console.error(err);
+        this.showAlert("Bir hata oluştu, listeleriniz yüklenemedi, lütfen tekrar deneyiniz");
+      });	
+    },
+
+
+
+
+
     resizeEventHandler(e) {
       this.mainRowWidth = document.getElementById('mainRow').getBoundingClientRect().width;
     },
@@ -158,11 +233,23 @@ const app = Vue.createApp({
 
 
     removeMovie(listType, imdbID) {
-      //TODO not yet implemented
-      console.log(listType + " listesinden " + imdbID + " filmi çıkarıldı");
+      var fd = new FormData();  
+      fd.append('userId', this.profile.userId);
+      fd.append('listId', listType);
+      fd.append('movieId', imdbID);
+      axios.post('services/deleteMovieListData.php', fd).then(
+        resp => {	
+          this.showAlert(resp.data);
+          this.hideModal(this.searchBox);
+          this.fillMovieListData();
+        }
+      ).catch((err) => {
+        console.error(err);
+        this.showAlert("Bir hata oluştu, tekrar deneyin");
+      });	
     },
 
-    addMovie(imdbID) {
+    addMovie(listType, imdbID) {
       imdbID = imdbID.toString().trim();
       if(this.searchBox.movieIdData[imdbID]) {
         this.showAlert("Bu Film zaten listenizde bulunuyor");
@@ -179,23 +266,31 @@ const app = Vue.createApp({
           }).then(response => {	
             var resp = response.data;
             if(resp.success) { 
+              
               var result = resp.result;
-              var data = {
-                "imdbID": result.imdbID,
-                "Poster": result.Poster,
-                "Title": result.Title,
-                "Year": result.Year,
-                "Runtime": result.Runtime,
-                "imdbRating": result.imdbRating,
-                "imdbVotes" : result.imdbVotes,
-                "Director" : result.Director,
-                "Writer": result.Writer,
-                "Actors": result.Actors,
-              }
-
-              this.userList[this.searchBox.listType].push(data);
-
-              //TODO
+              var fd = new FormData();  
+              fd.append('userId', this.profile.userId);    
+              fd.append('movieId', imdbID);     
+              fd.append('listId', listType);     
+              fd.append('poster', result.Poster);     
+              fd.append('title', result.Title);     
+              fd.append('year', result.Year);     
+              fd.append('runtime', result.Runtime);     
+              fd.append('imdbRating', result.imdbRating);     
+              fd.append('imdbVotes', result.imdbVotes);     
+              fd.append('director', result.Director);     
+              fd.append('writer', result.Writer);     
+              fd.append('actors', result.Actors);  
+              axios.post('services/insertMovieListData.php', fd).then(
+                resp => {
+                  this.showAlert(resp.data);
+                  this.fillMovieListData();
+                }
+              ).catch((err) => {
+                console.error(err);
+                this.showAlert("Bir hata oluştu, tekrar deneyin");
+              });
+	
               this.hideModal(this.searchBox);
             } else {
               this.showAlert("Sonuç bulunamadı");
@@ -221,15 +316,35 @@ const app = Vue.createApp({
     },
 
     rateMovie() {
-      //TODO
-      this.hideRateBox();
-      this.rateBox.movie.userScore = this.rateBox.score;
+      var fd = new FormData();  
+      fd.append('userId', this.profile.userId);
+      fd.append('movieId', this.rateBox.movie.imdbID);
+      fd.append('userRating', this.rateBox.score);
+      axios.post('services/updateUserRating.php', fd).then(
+        resp => {	
+          this.fillMovieListData();
+          this.hideRateBox(); 
+        }
+      ).catch((err) => {
+        console.error(err);
+        this.showAlert("Bir hata oluştu, listeleriniz yüklenemedi, lütfen tekrar deneyiniz");
+      });
     },
 
     changePermission() {
-      this.allowOtherUser = !this.allowOtherUser;
-      console.log("permission set to -> " + this.allowOtherUser);
-       //TODO
+      this.profile.allowOtherUser = !this.profile.allowOtherUser;
+      console.log("permission set to -> " + this.profile.allowOtherUser);
+      var fd = new FormData();  
+      fd.append('userId', this.profile.userId);
+      fd.append('publicProfile', this.profile.allowOtherUser?1:0);
+      axios.post('services/updateUserData.php', fd).then(
+        resp => {	
+          console.log(resp.data);
+        }
+      ).catch((err) => {
+        console.error(err);
+        this.showAlert("Bir hata oluştu, tekrar deneyin");
+      });	
     },
 
     checkNaN(text) {
@@ -242,14 +357,15 @@ const app = Vue.createApp({
       } else if(type == 'runtime' && !this.checkNaN(text)) {
         return text.replace('min','dk');
       } else  if(type == 'timestamp') {
-        return this.checkNaN(text) || text === 0 ?"--.--.--":(new Date(text*1000)).toLocaleDateString("tr-TR");       
+        return this.checkNaN(text) || text === 0 ?"--.--.--":(new Date(text*1000)).toLocaleDateString("tr-TR");   
+      } else if(type == 'avatar') {
+        return this.checkNaN(text) ? 'images/default_avatar.svg':'./download/file.php?avatar=' + text;
       } else {
         return this.checkNaN(text) ? "-" : text; 
       }
 
     },
 
-    
     getFilteredList(listType) {
       return this.userList[listType].filter(item => {
         return item.Title.toString().toLowerCase().indexOf(this.userListFilter[listType].toString().toLowerCase()) > -1
@@ -257,14 +373,15 @@ const app = Vue.createApp({
     },
 
     viewProfile(viewId) {
-      //TODO
       this.profile.userId = viewId;
+      this.refresh();
       this.profile.guestMode = true;
     },
 
     homePage() {
       //TODO
       this.profile.userId = this.profile.loginId;
+      this.refresh();
       this.profile.guestMode = false;
     }
 	

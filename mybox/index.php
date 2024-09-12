@@ -21,168 +21,181 @@
 		</div>
 		<div v-else class="container" style="margin-left: 0px; margin-right: 0px;">
 			<div v-if="profile.guestMode" class="btn-exit-profile" :style="{'left':(mainRowWidth-105) +'px'}">
-				<button class="button-4"  @click="homePage">Geri dön</button>
+				<button class="button-4" @click="homePage">Geri dön</button>
 			</div>
-			<div class="row list-card user-card" :style="{'width':(mainRowWidth-30) +'px'}">
-				<div class="col-12 col-md-6" >
-					
-					<table class="word-break" style="font-size: 12px; margin-left: -15px;">
-						<tr>
-							<td rowspan="4" style="vertical-align: top;">
-								<img src="images/avatar.jpg" class="user-avatar"/>								
-							</td>
-							<td rowspan="4">
-								<span style="display: block; width: 10px;">&nbsp;</span>
-							</td>
-							<td>
-								<span class="profileHeader">dragon</span>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<span>
-									<span class="font-bold">E-posta : </span><span>dragon@sinokur.com</span>
-								</span>
-						</tr>
-						<tr>
-							<td>
-								<span class="font-bold">Web sitesi : </span><span>www.iucoders.com</span>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<span class="font-bold">Letterboxd : </span><span>https://letterboxd.com/dragon</span>
-							</td>
-						</tr>										
-						<tr>
-							<td colspan="2">
-								<div v-if="!profile.guestMode" class="margin-t10 margin-b5">
-									<img :src="allowOtherUser?'images/selected.svg':'images/unselected.svg'" @click="changePermission" class="pointer margin-r5"/>
-									<span class="checkboxSpan">Arkadaşlarım Sayfamı Görüntüleyebilsin</span>
-								</div>
-							</td>
-						</tr>
-					</table>
-					
-			  	</div>
-				<div v-if="!profile.guestMode" class="col-12 col-md-6">
-					<div class="margin-t10">
-						<span class="profileHeader">Arkadaş Listesi (rumuz - son ziyaret tarihi)</span>
-					</div>
-					<div class="friend-table-div">
-						<table class="friend-table">
-							<tr v-for="(friend, index) in friendList">
-								<td>
-									<span class="font-bold"> {{retrieve(friend.username)}}</span>
+
+			<div v-if="profile.guestMode && !profile.allowOtherUser">
+				<span class="font-bold">
+					<h5>Bu sayfa diğer üyelere açık değildir</h5>				
+				</span>
+			</div>
+			<template v-else>
+				<div class="row list-card user-card" :style="{'width':(mainRowWidth-30) +'px'}">
+					<div class="col-12 col-md-6" >
+						
+						<table class="word-break" style="font-size: 12px; margin-left: -15px;">
+							<tr>
+								<td rowspan="4" style="vertical-align: top;">
+									<img :src="retrieve(profile.avatar, 'avatar')" class="user-avatar"/>								
 								</td>
-								<td style="text-align: right;">
-									<span>{{retrieve(friend.user_lastvisit, 'timestamp')}}</span>		
-									<img src="images/preview.svg" @click="viewProfile(friend.user_id)"/>								
+								<td rowspan="4">
+									<span style="display: block; width: 10px;">&nbsp;</span>
+								</td>
+								<td>
+									<span class="profileHeader">{{retrieve(profile.username)}}</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<span class="font-bold">E-posta : </span><span>{{retrieve(profile.email)}}</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<span class="font-bold">Web sitesi : </span>
+									<span v-if="profile.website"><a :href="profile.website" target="_blank">{{profile.website}}</a></span>
+									<span v-else>{{retrieve(profile.website)}}</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<span class="font-bold">Letterboxd : </span>
+									<span v-if="profile.letterboxd"><a :href="'https://letterboxd.com/' + profile.letterboxd" target="_blank">{{'https://letterboxd.com/' + profile.letterboxd + '/'}}</a></span>
+									<span v-else>{{retrieve(profile.letterboxd)}}</span>
+								</td>
+							</tr>										
+							<tr>
+								<td colspan="3">
+									<div v-if="!profile.guestMode" class="margin-t10 margin-b5">
+										<img :src="profile.allowOtherUser?'images/selected.svg':'images/unselected.svg'" @click="changePermission" class="pointer margin-r5"/>
+										<span class="checkboxSpan">Arkadaşlarım Sayfamı Görüntüleyebilsin</span>
+									</div>
 								</td>
 							</tr>
 						</table>
-					</div>				
-				</div>			  
-			</div>
-			
-			<div class="row" id="mainRow">			
-
-
-				<div class="col-12 col-md-6" v-for="(listKey, index) in Object.keys(userListInfo)">
-					<div class="list-card">		
-						<div class="margin-l10 margin-t5">
-							<img src="images/folder.svg" class="margin-r5" style="width: 30px;"/>
-							<span class="listHeader">{{userListInfo[listKey].header}}</span>	
-							<span v-if="userList[listKey].length > 0" class="listHeaderSearch"><input class="input-search" type="text" v-model="userListFilter[listKey]"/></span>							
-						</div>	
-						<div v-if="userList[listKey].length == 0" class="cardInfo">
-							Henüz listenizde film bulunmuyor, lütfen ekleyiniz.
-						</div>	
-						<div v-if="userList[listKey].length > 0">
-							<table class="margin-t5">
-								<template v-for="(movie, index) in getFilteredList(listKey)">
-									<tr>									
-										<td style="padding: 5px;">
-											<img :src="retrieve(movie.Poster, 'poster')" style="width: 70px;"/>											
-										</td>
-										<td>
-											<table>
-												<tr>
-													<td colspan="3">
-														<img v-if="!profile.guestMode" class="btn-delete-movie" src="images/delete.svg" @click="removeMovie(listKey,movie.imdbID)"/> <span class="font-bold">{{retrieve(movie.Title)}}</span>
-													</td>
-												</tr>
-												<tr>
-													<td style="text-align: center;">
-														{{retrieve(movie.Year)}}
-													</td>
-													<td>
-														&nbsp;-&nbsp;
-													</td>
-													<td>
-														{{retrieve(movie.Runtime,'runtime')}}
-													</td>
-												</tr>
-												<tr>	
-													<td>
-														<span class="imdb-label">
-															<a :href="'https://www.imdb.com/title/' + movie.imdbID +'/'" target="_blank">&nbsp;IMDb&nbsp;</a>
-														</span>
-													</td>	
-													<td>
-														&nbsp;:&nbsp;
-													</td>										
-													<td>
-														<span class="font-bold">{{retrieve(movie.imdbRating)}}</span><span>{{'/10 (' + retrieve(movie.imdbVotes) + ' oy)'}}</span>
-													</td>
-												</tr>
-												<tr>
-													<td colspan="3" v-if="!movie.userScore" @click="showRateBox(movie)">
-														<span v-if="!profile.guestMode" class="your-rate-label">
-															<img src="images/blank_star.svg" style="padding-bottom: 5px; width: 30px;">
-															Puanla&nbsp;													
-														</span>
-														<span v-if="movie.forumScore">
-															<span>&nbsp;Forum&nbsp;:&nbsp;</span>
-															<span class="font-bold">{{retrieve(movie.forumScore)}}</span>
-															<span>{{'/10 (' + retrieve(movie.forumVoteCount) + ' oy)'}}</span>
-														</span>
-													</td>
-													<td colspan="3" v-if="movie.userScore" @click="showRateBox(movie)">
-														<span v-if="!profile.guestMode" class="your-rate-label">
-															<img src="images/filled_star.svg" style="padding-bottom: 5px; width: 30px;">
-															<span>{{retrieve(movie.userScore) +'/10'}}</span>																			
-														</span>
-														<span v-if="movie.forumScore">
-															<span>&nbsp;Forum&nbsp;:&nbsp;</span>
-															<span class="font-bold">{{retrieve(movie.forumScore)}}</span>
-															<span>{{'/10 (' + retrieve(movie.forumVoteCount) + ' oy)'}}</span>
-														</span>
-													</td>
-													
-												</tr>											
-											</table>
-										</td>									
-									</tr>
-									<tr v-if="index != userList[listKey].length-1">
-										<td colspan="3">
-											<div class="seperator"></div>
-										</td>
-									</tr>
-								</template>
+						
+					</div>
+					<div v-if="!profile.guestMode" class="col-12 col-md-6">
+						<div class="margin-t10">
+							<span class="profileHeader">Arkadaş Listesi (rumuz - son ziyaret tarihi)</span>
+						</div>
+						<div class="friend-table-div">
+							<table class="friend-table">
+								<tr v-for="(friend, index) in friendList">
+									<td>
+										<span class="font-bold"> {{retrieve(friend.username)}}</span>
+									</td>
+									<td style="text-align: right;">
+										<span>{{retrieve(friend.user_lastvisit, 'timestamp')}}</span>		
+										<img src="images/preview.svg" @click="viewProfile(friend.user_id)"/>								
+									</td>
+								</tr>
 							</table>
-						</div>					
+						</div>				
+					</div>			  
+				</div>
+				
+				<div class="row" id="mainRow">			
+
+
+					<div class="col-12 col-md-6" v-for="(listKey, index) in Object.keys(userListInfo)">
+						<div class="list-card">		
+							<div class="margin-l10 margin-t5">
+								<img src="images/folder.svg" class="margin-r5" style="width: 30px;"/>
+								<span class="listHeader">{{userListInfo[listKey].header}}</span>	
+								<span v-if="userList[listKey].length > 0" class="listHeaderSearch"><input class="input-search" type="text" v-model="userListFilter[listKey]"/></span>							
+							</div>	
+							<div v-if="userList[listKey].length == 0 && !profile.guestMode" class="cardInfo">
+								Henüz listenizde film bulunmuyor, lütfen ekleyiniz.
+							</div>	
+							<div v-if="userList[listKey].length == 0 && profile.guestMode" class="cardInfo">
+								Henüz listesinde film bulunmuyor.
+							</div>
+							<div v-if="userList[listKey].length > 0">
+								<table class="margin-t5">
+									<template v-for="(movie, index) in getFilteredList(listKey)">
+										<tr>									
+											<td style="padding: 5px;">
+												<img :src="retrieve(movie.Poster, 'poster')" style="width: 70px;"/>											
+											</td>
+											<td>
+												<table>
+													<tr>
+														<td colspan="3">
+															<img v-if="!profile.guestMode" class="btn-delete-movie" src="images/delete.svg" @click="removeMovie(listKey,movie.imdbID)"/> <span class="font-bold">{{retrieve(movie.Title)}}</span>
+														</td>
+													</tr>
+													<tr>
+														<td style="text-align: center;">
+															{{retrieve(movie.Year)}}
+														</td>
+														<td>
+															&nbsp;-&nbsp;
+														</td>
+														<td>
+															{{retrieve(movie.Runtime,'runtime')}}
+														</td>
+													</tr>
+													<tr>	
+														<td>
+															<span class="imdb-label">
+																<a :href="'https://www.imdb.com/title/' + movie.imdbID +'/'" target="_blank">&nbsp;IMDb&nbsp;</a>
+															</span>
+														</td>	
+														<td>
+															&nbsp;:&nbsp;
+														</td>										
+														<td>
+															<span class="font-bold">{{retrieve(movie.imdbRating)}}</span><span>{{'/10 (' + retrieve(movie.imdbVotes) + ' oy)'}}</span>
+														</td>
+													</tr>
+													<tr>
+														<td colspan="3" v-if="!movie.userScore" @click="showRateBox(movie)">
+															<span v-if="!profile.guestMode" class="your-rate-label">
+																<img src="images/blank_star.svg" style="padding-bottom: 5px; width: 30px;">
+																Puanla&nbsp;													
+															</span>
+															<span v-if="movie.forumScore">
+																<span>&nbsp;Forum&nbsp;:&nbsp;</span>
+																<span class="font-bold">{{retrieve(movie.forumScore)}}</span>
+																<span>{{'/10 (' + retrieve(movie.forumVoteCount) + ' oy)'}}</span>
+															</span>
+														</td>
+														<td colspan="3" v-if="movie.userScore" @click="showRateBox(movie)">
+															<span v-if="!profile.guestMode" class="your-rate-label">
+																<img src="images/filled_star.svg" style="padding-bottom: 5px; width: 30px;">
+																<span>{{retrieve(movie.userScore) +'/10'}}</span>																			
+															</span>
+															<span v-if="movie.forumScore">
+																<span>&nbsp;Forum&nbsp;:&nbsp;</span>
+																<span class="font-bold">{{retrieve(movie.forumScore)}}</span>
+																<span>{{'/10 (' + retrieve(movie.forumVoteCount) + ' oy)'}}</span>
+															</span>
+														</td>
+														
+													</tr>											
+												</table>
+											</td>									
+										</tr>
+										<tr v-if="index != userList[listKey].length-1">
+											<td colspan="3">
+												<div class="seperator"></div>
+											</td>
+										</tr>
+									</template>
+								</table>
+							</div>					
+						</div>
+						<div v-if="!profile.guestMode" class="cardAddBtn">
+							<button class="button-3"  @click="showSearchBox(listKey)">+ Ekle</button>
+						</div>
 					</div>
-					<div v-if="!profile.guestMode" class="cardAddBtn">
-						<button class="button-3"  @click="showSearchBox(listKey)">+ Ekle</button>
-					</div>
+
+
+
 				</div>
 
-
-
-			</div>
-
-
+			</template>
 
 
 			<div class="row">
@@ -220,8 +233,8 @@
 				<div>
 					<table style="width:100%">
 						<tr>
-							<td><input type="text" v-on:keyup.enter="searchBox.searchType=='title'?searchMovie():addMovie(searchBox.movieName)" v-model="searchBox.movieName" placeholder="Lütfen aramak istdiğiniz film adını girin"></input></td>
-							<td><button class="button-3" @click="searchBox.searchType=='title'?searchMovie():addMovie(searchBox.movieName)">{{searchBox.searchType=='title'?'Film Ara':'Film Ekle'}}</button></td>
+							<td><input type="text" v-on:keyup.enter="searchBox.searchType=='title'?searchMovie():addMovie(searchBox.listType, searchBox.movieName)" v-model="searchBox.movieName" placeholder="Lütfen aramak istdiğiniz film adını girin"></input></td>
+							<td><button class="button-3" @click="searchBox.searchType=='title'?searchMovie():addMovie(searchBox.listType, searchBox.movieName)">{{searchBox.searchType=='title'?'Film Ara':'Film Ekle'}}</button></td>
 						</tr>
 					</table>
 				</div>
@@ -242,7 +255,7 @@
 										</tr>									
 										<tr>
 											<td>			
-												<button v-if="!searchBox.movieIdData[movie.imdbID]" class="button-3" @click="addMovie(movie.imdbID)">Ekle</button>	
+												<button v-if="!searchBox.movieIdData[movie.imdbID]" class="button-3" @click="addMovie(searchBox.listType, movie.imdbID)">Ekle</button>	
 												<button v-if="searchBox.movieIdData[movie.imdbID]" class="button-4" @click="removeMovie(searchBox.listType,movie.imdbID)">Çıkar</button>	
 											</td>										
 										</tr>									
