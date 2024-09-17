@@ -27,7 +27,7 @@ function getQueryResult($sql, $userId) {
 $result = getQueryResult("select * from phpbb_users t1 left join mybox_user_data t2 on t1.user_id = t2.user_id left join phpbb_profile_fields_data t3 on t1.user_id = t3.user_id where t1.user_id = ?", $userId);
 $users = $result->fetch_all(MYSQLI_ASSOC);
 
-$result = getQueryResult("select t2.user_id, t2.username, t2.user_lastvisit from sineokur_phpb.phpbb_zebra t1 left join sineokur_phpb.phpbb_users t2 on t1.zebra_id = t2.user_id where t1.friend = 1 and t1.user_id = ?", $userId);
+$result = getQueryResult("select t2.user_id, t2.username, t2.user_lastvisit from phpbb_zebra t1 left join phpbb_users t2 on t1.zebra_id = t2.user_id where t1.friend = 1 and t1.user_id = ?", $userId);
 $friends = $result->fetch_all(MYSQLI_ASSOC);
 $row_count = $result->num_rows;
 

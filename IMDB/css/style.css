@@ -1,0 +1,63 @@
+
+.font-bold {
+    font-weight: bold;
+}
+
+.movie-poster {
+    width: 150px;
+    margin-right: 7px;
+}
+
+.movie-poster-td {
+    vertical-align: top;
+}
+
+.movie-title {
+    font-size: 20pt;
+    font-weight: bold;
+}
+
+.movie-title-tr {
+    font-size: 12pt;
+    margin-bottom: 10px;
+}
+
+.movie-director {
+    font-size: 10pt;
+}
+
+.movie-default {
+    font-size: 8pt;
+}
+
+.movie-imdb-rating {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.movie-overview-header {
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.movie-card {
+    border: 1px solid #FF7F50;
+    border-radius: 10px;
+    background-color: #F8F6F2;
+    padding: 10px;
+    width: 550px;
+}
+
+.movie-favorite-ico {
+    width: 30px;
+    position: absolute;
+    left: 540px;
+    cursor: pointer;
+}
+
+.movie-list-ico {
+    width: 30px;
+    position: absolute;
+    left: 509px;
+    cursor: pointer;
+}

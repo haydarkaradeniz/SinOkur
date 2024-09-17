@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="katman_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 72 72">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3 {
+        fill: none;
+      }
+
+      .cls-4 {
+        clip-path: url(#clippath-1);
+      }
+
+      .cls-5 {
+        fill: #ef7d53;
+      }
+
+      .cls-2, .cls-3 {
+        clip-rule: evenodd;
+      }
+
+      .cls-6 {
+        clip-path: url(#clippath-2);
+      }
+
+      .cls-3 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <polygon class="cls-2" points="0 72 72 72 72 0 0 0 0 72 0 72"/>
+    </clipPath>
+    <clipPath id="clippath-1">
+      <polygon class="cls-3" points="0 0 72 0 72 72 0 72 0 0 0 0"/>
+    </clipPath>
+    <clipPath id="clippath-2">
+      <polygon class="cls-1" points="0 72 72 72 72 0 0 0 0 72 0 72"/>
+    </clipPath>
+  </defs>
+  <g id="katman_1">
+    <g class="cls-4">
+      <g class="cls-6">
+        <path class="cls-5" d="M36.31,8.15c-15.55,0-28.15,12.6-28.15,28.15s12.6,28.15,28.15,28.15,28.15-12.6,28.15-28.15h0c0-15.54-12.59-28.14-28.13-28.15h-.02ZM50.1,38.81h-11.29v11.29h-5.01v-11.29h-11.29v-5.01h11.29v-11.29h5.01v11.29h11.29v5.01h0Z"/>
+      </g>
+    </g>
+  </g>
+</svg>

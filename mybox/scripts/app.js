@@ -54,7 +54,7 @@ const app = Vue.createApp({
         visible: false,
         title: "",
       },
-      mainRowWidth:0,
+      mainRowWidth:500,
       profile : {
         avatar:"",
         email:"",
@@ -74,10 +74,6 @@ const app = Vue.createApp({
   mounted() {    
    //not yet implemented
    this.getSessionUser();
-   this.mainRowWidth = document.getElementById('mainRow').getBoundingClientRect().width;
-   console.log(Object.keys(this.userListInfo));
-   this.refresh();
-
 
   },
   created() {
@@ -98,13 +94,15 @@ const app = Vue.createApp({
       var fd = new FormData();  
       axios.post('services/getSessionUser.php', fd).then(
         resp => {	
-          this.profile.userId = resp.data.userId;
-          this.profile.loginId = resp.data.userId;
+          if(this.resp.data.userId && this.resp.data.userId > 1) {
+            this.profile.userId = resp.data.userId;
+            this.profile.loginId = resp.data.userId;
+            this.refresh();
           }
-        ).catch((err) => {
+        }).catch((err) => {
           console.error(err);
-          this.profile.userId = 61;
-          this.profile.loginId = 61;
+          this.profile.userId = 2;
+          this.profile.loginId = 2;
         }
       );
     },
@@ -140,7 +138,9 @@ const app = Vue.createApp({
             this.userList[movieData.listId].push(data);
           }
         }
-      );	
+      ).finally(()=>{
+        this.mainRowWidth = document.getElementById('mainRow').getBoundingClientRect().width;
+      });	
 
 
     },

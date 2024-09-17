@@ -11,9 +11,9 @@
 	$auth->acl($user->data);
 	//$user->setup('mods/template');
 	echo "{";
-	echo "'userId':'".$user->data['user_id']."',";
-	echo "'userName':'".$user->data['username']."',";
-	echo "'email':'".$user->data['user_email']."',";
-	echo "'ip':'".$user->data['user_ip']."',";
+	echo '"userId":"'.$user->data['user_id'].'",';
+	echo '"userName":"'.$user->data['username'].'",';
+	echo '"email":"'.$user->data['user_email'].'",';
+	echo '"ip":"'.$user->data['user_ip'].'"';
 	echo "}";
 ?>
