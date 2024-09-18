@@ -5,8 +5,10 @@ const app = Vue.createApp({
       tmdb_api_key: "691a740114fe7dc34fbbe9f1a464cc5e",   
       omdb_api_key: "68d73d3c",   
       imdbID: "",
+      tmdbID: "",
       viewType: "",
       movieData : {},
+      personData: {},
       apiData: {},
       detailData: {
         fovorite : false,
@@ -23,10 +25,12 @@ const app = Vue.createApp({
     let uri = window.location.search.substring(1); 
     let params = new URLSearchParams(uri);
     this.imdbID = params.get("id");
-    this.viewType = this.imdbID[0] == 't' ? 'movie':'people';
+    this.viewType = this.imdbID[0] == 't' ? 'movie':'person';
     if(this.viewType == 'movie') {
       this.getOMDBMovieDetail();
-    }
+    } else if(this.viewType == 'person') {
+      this.findTMDBPersonId();
+    } 
   },
   destroyed() {
   },
@@ -57,12 +61,34 @@ const app = Vue.createApp({
       } else if(type == 'genre' && !this.checkNaN(text)) {
         return this.convertGenre(text);
       } else if(type == 'title' && !this.checkNaN(text)) {
-        return text.toUpperCase();
+        return text.toLocaleUpperCase('tr');
       } else if(type == 'overview' && !this.checkNaN(text)) {
-        var maxLength = 4000;
+        var maxLength = 100;
         this.movieData.overviewLink = text.length>maxLength;
         return this.movieData.overviewLink ? text.substring(0, maxLength) : text;
-      } 
+      } else if(type == 'person-name' && !this.checkNaN(text)) {
+        return text.toLocaleUpperCase('tr');
+      } else if(type == 'person-type' && !this.checkNaN(text)) {
+        if(text === 'Acting') {
+          return 'OYUNCU';
+        } else if(text === 'Directing') {
+          return 'YÖNETMEN';
+        } else {
+          return text;
+        }
+      } else if(type == 'tmdb-birthday' && !this.checkNaN(text)) {
+        if(text.length == 10) {
+          var str = text.substring(8,10) + "." + text.substring(5,7) + "." + text.substring(0,4);
+          var birthday = new Date(text);
+          var ageDifMs = Date.now() - birthday.getTime();
+          var ageDate = new Date(ageDifMs);
+          return str + " (" + Math.abs(ageDate.getUTCFullYear()-1970) + " yaşında)";
+        } else {
+          return text;
+        }
+      } else if(type == 'tmdb-poster') {
+        return !this.checkNaN(text)?"http://image.tmdb.org/t/p/w500" + text:'images/default.gif';
+      }
       
       
       else {
@@ -81,17 +107,48 @@ const app = Vue.createApp({
         this.movieData.genre = this.retrieve(this.apiData.Genre, 'genre');
         this.movieData.imdbRating = this.retrieve(this.apiData.imdbRating);
         this.movieData.imdbVotes = this.retrieve(this.apiData.imdbVotes);
-        this.movieData.runtime = this.retrieve(this.apiData.Runtime, 'runtime');
+       this.movieData.runtime = this.retrieve(this.apiData.Runtime, 'runtime');
         this.movieData.type = this.apiData.Type;
       } else if(source == 'tmdb') {
         this.movieData.title_tr = this.retrieve(this.apiData.title, 'title');
-        this.movieData.poster = "http://image.tmdb.org/t/p/w500" + this.apiData.poster_path;
+        this.movieData.poster = this.retrieve(this.apiData.poster_path, 'tmdb-poster');
         this.movieData.overview = this.retrieve(this.apiData.overview, 'overview');
-      } else if(source == 'tmdb-error') {
+     } else if(source == 'tmdb-error') {
         this.movieData.title_tr = this.movieData.title;
-        this.movieData.poster = this.movieData.omdb_poster;
+        this.movieData.poster = this.retrieve(this.movieData.omdb_poster, 'poster');
         this.movieData.director = this.checkNaN(this.movieData.omdb_director) && this.movieData.type == 'series' ? 'Farklı yönetmenler' : this.movieData.director; 
-      }
+      } else if(source == 'tmdb-find-id') {
+        this.personData.type = this.retrieve(this.apiData.known_for_department, 'person-type');
+      } else if(source == 'tmdb-person') {
+          this.personData.name = this.retrieve(this.apiData.name, 'person-name');
+          this.personData.place_of_birth = this.retrieve(this.apiData.place_of_birth);
+          this.personData.birthday = this.retrieve(this.apiData.birthday, 'tmdb-birthday');
+          this.personData.profile_path = this.retrieve(this.apiData.profile_path, 'tmdb-poster');
+        } else if(source == 'tmdb-person-movies') {
+          if(this.apiData.cast && this.apiData.cast.length > 0) {
+            var maxLength = 200;
+            var currentLength = 0;
+            var movies = [];
+            var index = 0;
+            for(index=0; index<this.apiData.cast.length; index++) {
+              var moviesData = {
+                original_title : this.retrieve(this.apiData.cast[index].original_title),
+                character : this.retrieve(this.apiData.cast[index].character)
+              };
+              movies.push(moviesData);
+              // ( olarak) ,
+              currentLength = currentLength + moviesData.original_title.length + moviesData.character.length + 
+                (this.personData.type==='YÖNETMEN' || moviesData.character.trim() === '-'?2:12);
+              if(currentLength>maxLength) {
+                break;
+              }
+            }
+            this.personData.movies = movies;
+            this.personData.moviesOverflowLink = index != this.apiData.cast.length;
+          } else {
+            return this.retrieve(undefined);
+          }
+        }
     },
 
 
@@ -129,13 +186,64 @@ const app = Vue.createApp({
         this.fillMovieData('tmdb-error');
         console.error(err);
       }).finally(()=> {});
-    
-
     },
 
+    findTMDBPersonId() {
+      axios.get('https://api.themoviedb.org/3/find/' + this.imdbID, {
+        params: {
+          "language":"tr",
+          "api_key":this.tmdb_api_key,
+          "external_source": "imdb_id"
+        },
+        headers: {
+          "content-type":"application/json"
+        }
+      }).then(response => {	
+        if(response.data.person_results && response.data.person_results.length>0) {
+          this.tmdbID = response.data.person_results[0].id;
+          this.apiData = response.data.person_results[0];
+          this.fillMovieData('tmdb-find-id');
+          this.findTMDBPerson();
+        }
+      }).catch((err) => {
+        console.error(err);
+      }).finally(()=> {});
+    },
     
+    findTMDBPerson() {
+      axios.get('https://api.themoviedb.org/3/person/' + this.tmdbID, {
+        params: {
+          "language":"tr",
+          "api_key":this.tmdb_api_key
+        },
+        headers: {
+          "content-type":"application/json"
+        }
+      }).then(response => {	
+        this.apiData = response.data;
+        this.fillMovieData('tmdb-person');
+        this.findTMDBPersonMovies();
+      }).catch((err) => {
+        console.error(err);
+      }).finally(()=> {});
+    },
 
-
+    findTMDBPersonMovies() {
+      axios.get('https://api.themoviedb.org/3/person/' + this.tmdbID + '/movie_credits',  {
+        params: {
+          "language":"tr",
+          "api_key":this.tmdb_api_key
+        },
+        headers: {
+          "content-type":"application/json"
+        }
+      }).then(response => {	
+        this.apiData = response.data;
+        this.fillMovieData('tmdb-person-movies');
+      }).catch((err) => {
+        console.error(err);
+      }).finally(()=> {});
+    },
 
     multiReplace(data, mapObj) {
       var re = new RegExp(Object.keys(mapObj).join("|"),"gi");

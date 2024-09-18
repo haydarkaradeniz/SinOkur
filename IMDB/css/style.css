@@ -1,8 +1,6 @@
 
-.font-bold {
-    font-weight: bold;
-}
 
+/*** Film Künyesi CSS start ***/
 .movie-poster {
     width: 150px;
     margin-right: 7px;
@@ -12,14 +10,13 @@
     vertical-align: top;
 }
 
-.movie-title {
+.movie-title-tr {
     font-size: 20pt;
     font-weight: bold;
 }
 
-.movie-title-tr {
+.movie-title {
     font-size: 12pt;
-    margin-bottom: 10px;
 }
 
 .movie-director {
@@ -27,7 +24,7 @@
 }
 
 .movie-default {
-    font-size: 8pt;
+    font-size: 9pt;
 }
 
 .movie-imdb-rating {
@@ -44,8 +41,11 @@
     border: 1px solid #FF7F50;
     border-radius: 10px;
     background-color: #F8F6F2;
-    padding: 10px;
     width: 550px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 7px;
+    padding-bottom: 4px;
 }
 
 .movie-favorite-ico {
@@ -61,3 +61,82 @@
     left: 509px;
     cursor: pointer;
 }
+
+/*** Film Künyesi CSS end ***/
+/*** Oyuncu Künyesi CSS start ***/
+
+.person-card {
+    border: 1px solid #FF7F50;
+    border-radius: 10px;
+    background-color: #F8F6F2;
+    width: 550px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 7px;
+    padding-bottom: 4px;
+}
+
+.person-poster {
+    width: 150px;
+    margin-right: 7px;
+}
+
+.person-poster-td {
+    vertical-align: top;
+}
+
+.person-favorite-ico {
+    width: 30px;
+    position: absolute;
+    left: 540px;
+    cursor: pointer;
+}
+
+.person-list-ico {
+    width: 30px;
+    position: absolute;
+    left: 509px;
+    cursor: pointer;
+}
+
+.person-name {
+    font-size: 20pt;
+    font-weight: bold;
+}
+
+.person-job {
+    font-size: 12pt;
+}
+
+.person-birth {
+    font-size: 10pt;
+}
+
+.person-movies-header {
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.person-default {
+    font-size: 9pt;
+}
+
+/*** Oyuncu Künyesi CSS end ***/
+/*** GENEL CSS BAŞLANGIÇ ***/
+
+html, body {
+    font-family: verdana, Helvetica, Arial, sans-serif;
+}
+
+
+
+.font-bold {
+    font-weight: bold;
+}
+
+.margin-bt-10 {
+    margin-bottom: 10px;
+}
+
+
+
