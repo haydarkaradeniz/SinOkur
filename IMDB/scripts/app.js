@@ -63,7 +63,7 @@ const app = Vue.createApp({
       } else if(type == 'title' && !this.checkNaN(text)) {
         return text.toLocaleUpperCase('tr');
       } else if(type == 'overview' && !this.checkNaN(text)) {
-        var maxLength = 100;
+        var maxLength = 250;
         this.movieData.overviewLink = text.length>maxLength;
         return this.movieData.overviewLink ? text.substring(0, maxLength) : text;
       } else if(type == 'person-name' && !this.checkNaN(text)) {
@@ -126,7 +126,7 @@ const app = Vue.createApp({
           this.personData.profile_path = this.retrieve(this.apiData.profile_path, 'tmdb-poster');
         } else if(source == 'tmdb-person-movies') {
           if(this.apiData.cast && this.apiData.cast.length > 0) {
-            var maxLength = 200;
+            var maxLength = 400;
             var currentLength = 0;
             var movies = [];
             var index = 0;
@@ -137,7 +137,9 @@ const app = Vue.createApp({
               };
               movies.push(moviesData);
               // ( olarak) ,
-              currentLength = currentLength + moviesData.original_title.length + moviesData.character.length + 
+              currentLength = currentLength + moviesData.original_title.length + 
+                moviesData.character.length + 
+                (moviesData.character.trim() === '-'?0:moviesData.character.length) +
                 (this.personData.type==='YÖNETMEN' || moviesData.character.trim() === '-'?2:12);
               if(currentLength>maxLength) {
                 break;
@@ -185,7 +187,9 @@ const app = Vue.createApp({
       }).catch((err) => {
         this.fillMovieData('tmdb-error');
         console.error(err);
-      }).finally(()=> {});
+      }).finally(()=> {
+        this.resizeIFrame();
+      });
     },
 
     findTMDBPersonId() {
@@ -242,13 +246,20 @@ const app = Vue.createApp({
         this.fillMovieData('tmdb-person-movies');
       }).catch((err) => {
         console.error(err);
-      }).finally(()=> {});
+      }).finally(()=> {
+        this.resizeIFrame();
+      });
     },
 
     multiReplace(data, mapObj) {
       var re = new RegExp(Object.keys(mapObj).join("|"),"gi");
       return data.replace(re, function(matched){return mapObj[matched];});
 
+    },
+
+    resizeIFrame() {
+      var iframe = window.parent.document.getElementById('iframe-'+this.imdbID);
+      iframe.style.height =  (iframe.contentWindow.document.body.scrollHeight + 30) + 'px';
     },
 
     convertCountry(country) {

@@ -49,16 +49,15 @@
 }
 
 .movie-favorite-ico {
-    width: 30px;
     position: absolute;
-    left: 540px;
+    left: 560px;
     cursor: pointer;
 }
 
 .movie-list-ico {
-    width: 30px;
     position: absolute;
-    left: 509px;
+    left: 560px;
+    top: 48px;
     cursor: pointer;
 }
 
@@ -86,16 +85,15 @@
 }
 
 .person-favorite-ico {
-    width: 30px;
     position: absolute;
-    left: 540px;
+    left: 560px;
     cursor: pointer;
 }
 
 .person-list-ico {
-    width: 30px;
     position: absolute;
-    left: 509px;
+    left: 560px;
+    top: 48px;
     cursor: pointer;
 }
 
@@ -124,10 +122,11 @@
 /*** Oyuncu Künyesi CSS end ***/
 /*** GENEL CSS BAŞLANGIÇ ***/
 
+/*
 html, body {
     font-family: verdana, Helvetica, Arial, sans-serif;
 }
-
+*/
 
 
 .font-bold {
