@@ -1,0 +1,21 @@
+<center><iframe class="iframe-{SIMPLETEXT}" src="imdb/imdb.php?id={SIMPLETEXT}" title="Künye" style="display: block; width: 580px; height: 300px; border: none; color-scheme: light"></iframe></center>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Uygulaması</title>
+</head>
+<body style="margin:0">
+<iframe id="sanatcilar-iframe" src="../imdb\imdbDetail.php?detail=1" title="Sanatçılar" style="display: block; width: 100%; height: 100vh; border: none;"></iframe>
+</body>
+</html>
+
+
+
+if(!this.imdbID && this.detailMode) {
+      let uri2 = window.parent.location.search.substring(1); 
+      let params2 = new URLSearchParams(uri2);
+      this.imdbID = params2.get("id");    	
+     }

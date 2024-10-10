@@ -1,0 +1,253 @@
+
+.main-card {
+    width: 100%;
+}
+
+.main-poster {
+    width: 160px;
+    height: 240px;
+    margin-right: 7px;
+    border-radius: 15px;
+    margin-left: 5px;
+}
+
+.main-poster-tr {
+    height: 50px;
+}
+
+.main-poster-td {
+    vertical-align: top;
+}
+
+.rate-box-img-div {
+    text-align: left;
+    padding-left: 20px;
+}
+
+.person-favorite-ico {
+    position: absolute;
+    margin-left: -100px;
+    margin-top: 225px;
+    cursor: pointer;
+}
+
+.main-name {
+    font-size: 24pt;
+    font-weight: bold;
+    white-space: nowrap;
+    padding-top: 5px;
+    padding-bottom: 13px;
+}
+
+.main-job {
+    font-size: 16pt;
+    white-space: nowrap;
+}
+
+.main-director {
+    font-size: 12pt;
+    white-space: nowrap;
+}
+
+.person-birth-day {
+    font-size: 12pt;
+    white-space: nowrap;
+}
+
+.person-birth-place {
+    font-size: 12pt;
+}
+
+.imdb-rating {
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+.imdb-vote {
+    font-size: 10pt;
+}
+
+.main-default {
+    font-size: 12pt;
+}
+
+.overview-td {
+    vertical-align: top;
+}
+
+.overview-header {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 20px;
+}
+
+.main-info-td {
+    vertical-align: top;
+}
+
+.rate-star{
+    margin: 0px;
+    padding: 0px;
+    padding-bottom: 3px;
+    padding-top: 3px;
+}
+
+.movies-header-div {
+  margin-top: 5px;
+}
+
+
+.vertical-seperator {
+    width: 0.5px;
+    height: 275px;
+    background-color: #CCCCCC;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+
+.vertical-seperator-td {
+    vertical-align: top;
+    padding-top: 10px;
+}
+
+
+.movie-favorite-ico {
+    position: absolute;
+    margin-left: -145px;
+    margin-top: 225px;
+    cursor: pointer;
+}
+
+.movie-watched-ico {
+    position: absolute;
+    margin-left: -114px;
+    margin-top: 228px;
+    cursor: pointer;
+}
+
+.movie-list-ico {
+    position: absolute;
+    margin-left: -88px;
+    margin-top: 225px;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.movie-video-logined-ico {
+    position: absolute;
+    margin-left: -57px;
+    margin-top: 228px;
+    cursor: pointer;
+}
+
+
+.movie-video-not-logined-ico {
+    position: absolute;
+    margin-left: -100px;
+    margin-top: 228px;
+    cursor: pointer;
+}
+
+.fovorite-list-card {
+    border: 1px solid #FF7F50;
+    border-radius: 10px;
+    background-color: #F8F6F2;
+    min-width: 250px;
+    min-height: 120px;
+    position: absolute;
+    margin-top: -4px;
+    margin-left: 110px;
+    padding-top: 5px;
+    padding-left: 20px;
+}
+
+.movie-favorite-list-header {
+    font-size: 10pt;
+    vertical-align: top;
+    position: relative;
+    top: 8px;
+    padding-left: 5px;
+}
+
+.movie-list-header-ico {
+    cursor: pointer;
+    padding-left: 5px;
+}
+
+
+
+.movies-header {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.movie-list-title {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.movie-list-org-title {
+    font-size: 12pt;
+}
+
+.movie-list-poster {
+    width: 100px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+.movie-list-main-div {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
+.movie-list-item-div {
+    width: 150px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.main-imdb-score {
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+.main-imdb-vote {
+    font-size: 10pt;
+}
+
+.rate-box-div {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    width: -webkit-fit-content;
+    text-align: center;
+}
+
+.rate-box-td {
+    vertical-align: top;
+}
+
+.font-bold {
+    font-weight: bold;
+}
+
+.margin-bt-10 {
+    margin-bottom: 10px;
+}
+
+.margin-bt-20 {
+    margin-bottom: 20px;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+body {
+	background-color: transparent;
+}
+

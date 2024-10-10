@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Training VueJs Test</title>
+    <title>IMDb</title>
     <script src="scripts/axios.js"></script>
 	<script src="scripts/vue.global.js"></script>
     <link type="text/css" rel="stylesheet" href="css/style.css"/>
@@ -18,9 +18,19 @@
         <table>
           <tr>
             <td class="movie-poster-td" rowspan="3">
-              <img :src="movieData.poster" class="movie-poster"/>
-              <img :src="detailData.favorite?'images/favori_aktif.svg':'images/favori_pasif.svg'" class="movie-favorite-ico" @click="favorite('movie')"/>
-              <img :src="detailData.movieList?'images/liste_aktif.svg':'images/liste_pasif.svg'" class="movie-list-ico" @click="openListMenu('movie')"/>								
+              <a :href="subPath+'/app.php/filmler?detail=1&id='+imdbID" target="_parent"><img :src="movieData.poster" class="movie-poster"/></a>
+              <img v-if="profile.loginId" :src="basicListData[getFavoriteListId()]?'images/favori_aktif.svg':'images/favori_pasif.svg'" class="movie-favorite-ico" @click="favorite(getFavoriteListId(), undefined)"/>
+              <img v-if="profile.loginId" :src="basicListData['watched']?'images/izledim.svg':'images/izlemedim.svg'" class="movie-watched-ico" @click="favorite('watched',!basicListData['watched']?'planned':undefined)"/>
+              <img v-if="profile.loginId" :src="basicListData['movieListIcon']?'images/liste_aktif.svg':'images/liste_pasif.svg'" class="movie-list-ico" @click="showListMenu()"/>		
+              
+              <div v-if="favoriteListCardVisible" class="fovorite-list-card">
+                <div v-for="(listKey, index) in Object.keys(userListInfo)">
+                  <img :src="basicListData[listKey]?'images/tick_aktif.svg':'images/tick_pasif.svg'" class="movie-list-header-ico" @click="favorite(listKey, !basicListData[listKey] && listKey=='planned'?'watched':undefined)"/>
+                  <span class="movie-favorite-list-header">{{userListInfo[listKey].header}}</span>
+                </div>
+
+
+              </div>						
             </td>
             <td>
               <div class="movie-title-tr">{{movieData.title_tr}}</div>
@@ -40,7 +50,7 @@
             <td>
               <div>
                 <span class="movie-overview-header">Özet&nbsp;</span>
-                <span class="movie-default">{{movieData.overview}}<a v-if="movieData.overviewLink" href="#" target="_blank">>>daha fazlası için tıklayın</a></span>
+                <span class="movie-default">{{movieData.overview}}<a v-if="movieData.overviewLink" :href="subPath+'/app.php/filmler?detail=1&id='+imdbID" target="_parent">&nbsp;&lt;devamı&gt;</a></span>
               </div>
             </td>
           </tr>
@@ -54,9 +64,8 @@
         <table>
           <tr>
             <td class="person-poster-td" rowspan="3">
-              <img :src="personData.profile_path" class="person-poster"/>
-              <img :src="detailData.favorite?'images/favori_aktif.svg':'images/favori_pasif.svg'" class="person-favorite-ico" @click="favorite('person')"/>
-              <img :src="detailData.movieList?'images/liste_aktif.svg':'images/liste_pasif.svg'" class="person-list-ico" @click="openListMenu('person')"/>								
+              <a :href="subPath+'/app.php/sanatcilar?detail=1&id='+imdbID" target="_parent"><img :src="personData.profile_path" class="person-poster"/></a>
+              <img v-if="profile.loginId" :src="basicListData[getFavoriteListId()]?'images/favori_aktif.svg':'images/favori_pasif.svg'" class="person-favorite-ico" @click="favorite(getFavoriteListId())"/>							
             </td>
             <td>
               <div class="person-name">{{personData.name}}</div>
@@ -78,11 +87,11 @@
                 </div>
                 <template v-for="(movie, index) in personData.movies">
                   <span class="person-default" :class="{'font-bold':personData.type!='YÖNETMEN'}">{{movie.original_title}}</span>
-                  <span v-if="personData.type!='YÖNETMEN' && movie.character.trim()!=='-'" class="person-default">{{' (' + movie.character + ' olarak)'}}</span>
+                  <span v-if="personData.type!='YÖNETMEN' && movie.character.trim()!=='-'" class="person-default">{{' (' + movie.character + ')'}}</span>
                   <span v-if="index != personData.movies.length-1" class="person-default">,&nbsp;</span>
                 </template>
                 <span v-if="personData.moviesOverflowLink" class="person-default">
-                  <a href="#" target="_blank">>>daha fazlası için tıklayın</a>
+                  <a :href="subPath+'/app.php/sanatcilar?detail=1&id='+imdbID" target="_parent">&nbsp;&lt;devamı&gt;</a>
                 </span>
               </div>
             </td>
@@ -93,10 +102,35 @@
         </table>
       </div>
 
-
+    
 	  </div>
 
     <script src="scripts/app.js"></script>
-
+    <script language="Javascript">
+      var isNS = (navigator.appName == "Netscape") ? 1 : 0;
+      var EnableRightClick = 0;
+      if(isNS)
+      document.captureEvents(Event.MOUSEDOWN||Event.MOUSEUP);
+      function mischandler(){
+      if(EnableRightClick==1){ return true; }
+      else {return false; }
+      }
+      function mousehandler(e){
+      if(EnableRightClick==1){ return true; }
+      var myevent = (isNS) ? e : event;
+      var eventbutton = (isNS) ? myevent.which : myevent.button;
+      if((eventbutton==2)||(eventbutton==3)) return false;
+      }
+      function keyhandler(e) {
+      var myevent = (isNS) ? e : window.event;
+      if (myevent.keyCode==96)
+      EnableRightClick = 1;
+      return;
+      }
+      document.oncontextmenu = mischandler;
+      document.onkeypress = keyhandler;
+      document.onmousedown = mousehandler;
+      document.onmouseup = mousehandler;
+    </script>
   </body>
 </html>
