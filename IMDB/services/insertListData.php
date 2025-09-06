@@ -32,9 +32,9 @@ $row_count = $result->num_rows;
 if($success === TRUE) {
 	if($row_count > 0) {
 		if($_POST['imdbType'] === 'movie') {
-			$sql = "update imdb_list_data set poster = ? , title = ? , year = ? , runtime = ? , imdb_rating = ? , imdb_votes = ? , movie_type = ? , update_date = CURRENT_TIMESTAMP where imdb_id = ? ";
+			$sql = "update imdb_list_data set poster = ? , title = ? , year = ? , runtime = ? , imdb_rating = ? , imdb_votes = ? , movie_type = ? , update_date = CURRENT_TIMESTAMP, title_tr = ? , director = ? where imdb_id = ? ";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("ssisssss", $_POST['poster'], $_POST['title'], $_POST['year'], $_POST['runtime'], $_POST['imdbRating'], $_POST['imdbVotes'], $_POST['movieType'], $_POST['imdbId']);
+			$stmt->bind_param("ssisssssss", $_POST['poster'], $_POST['title'], $_POST['year'], $_POST['runtime'], $_POST['imdbRating'], $_POST['imdbVotes'], $_POST['movieType'], $_POST['titleTr'], $_POST['director'], $_POST['imdbId']);
 			$success = $stmt->execute() === TRUE;
 		} else {
 			$sql = "update imdb_list_data set person_type = ? , name = ? , place_of_birth = ? , birthday = ? , profile_path = ?  , update_date = CURRENT_TIMESTAMP where imdb_id = ? ";
@@ -44,9 +44,9 @@ if($success === TRUE) {
 		}
 	} else {
 		if($_POST['imdbType'] === 'movie') {
-			$sql = "insert into imdb_list_data(imdb_id,poster,title,year,runtime,imdb_rating,imdb_votes,imdb_type, movie_type) values ( ? , ?, ?, ?, ?, ?, ?, ?, ? )";
+			$sql = "insert into imdb_list_data(imdb_id,poster,title,year,runtime,imdb_rating,imdb_votes,imdb_type, movie_type, title_tr, director) values ( ? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("sssisssss", $_POST['imdbId'], $_POST['poster'], $_POST['title'], $_POST['year'], $_POST['runtime'], $_POST['imdbRating'], $_POST['imdbVotes'], $_POST['imdbType'], $_POST['movieType']);
+			$stmt->bind_param("sssisssssss", $_POST['imdbId'], $_POST['poster'], $_POST['title'], $_POST['year'], $_POST['runtime'], $_POST['imdbRating'], $_POST['imdbVotes'], $_POST['imdbType'], $_POST['movieType'], $_POST['titleTr'], $_POST['director']);
 			$success = $stmt->execute() === TRUE;
 		} else {
 			$sql = "insert into imdb_list_data(imdb_id,person_type,name,place_of_birth,birthday,profile_path,imdb_type) values ( ? , ?, ?, ?, ?, ?, ? )";

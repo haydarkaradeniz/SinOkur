@@ -19,3 +19,63 @@ if(!this.imdbID && this.detailMode) {
       let params2 = new URLSearchParams(uri2);
       this.imdbID = params2.get("id");    	
      }
+
+     test1() {
+        var fd = new FormData();  
+        fd.append('userId', this.profile.userId);
+        axios.post(this.getBaseUrl() + 'services/test.php', fd).then(
+          resp => {	 
+            if(resp.data.testData) {
+              var max = resp.data.testData.length>10?10:resp.data.testData.length;
+              for(var i=0; i< max; i++) {
+                this.getOMDBMovieDetail(resp.data.testData[i].imdbId);
+              }
+            }
+          }
+        ).catch((err) => {
+          console.error(err);
+        }).finally(()=> {
+          //
+        });
+      },
+  
+      getTestIndex(imdbId) {
+        for(var i=0; i< this.searchBox.searchedMovies.length; i++) {
+          if(this.searchBox.searchedMovies[i].imdbId == imdbId) {
+            return i;
+          }
+        }
+        return -1;
+      },
+      test2() {
+        var fd = new FormData();  
+        fd.append('userId', this.profile.userId);
+        axios.post(this.getBaseUrl() + 'services/test.php', fd).then(
+          resp => {	 
+            if(resp.data.testData) {
+              const promises = [];
+              var max = resp.data.testData.length>10?10:resp.data.testData.length;
+              for(var i=0; i< max; i++) {
+                var searchedMovieIndex = this.getTestIndex(resp.data.testData[i].imdbId);
+                if(searchedMovieIndex>-1) {
+                  promises.push(this.addToUserList(resp.data.testData[i].userId, resp.data.testData[i].listId, this.searchBox.searchedMovies[searchedMovieIndex]));
+                }
+              }
+              Promise.all(promises).then(()=> {
+                console.log(" haydar done");
+            }).catch((err)=>{
+              console.error(err);
+            });
+            }
+          }
+        ).catch((err) => {
+          console.error(err);
+        }).finally(()=> {
+          //
+        });
+  
+  
+      },
+
+
+      :stylex="{'left':profile.guestMode || selectedListIndex == 6 || selectedListIndex == 7 ? '-150px':(selectedListIndex>7?'-250px':'-170px')}"

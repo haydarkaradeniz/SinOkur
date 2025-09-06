@@ -1,23 +1,27 @@
-
 const app = Vue.createApp({
   data() {
     return {
-      subPath:"/test",//"/"
-      tmdb_api_key: "691a740114fe7dc34fbbe9f1a464cc5e",   
-      omdb_api_key: "68d73d3c",   
+      subPath:"",//"/test"
+      tmdb_api_key: "691a740114fe7dc34fbbe9f1a464cc5e",
+      omdb_api_key: "68d73d3c",
+      opensubtitles_api_key: "XabMkvciKNZrR3Dq1xDEBP3Kto030u5v", // OpenSubtitles API Anahtarınız
       imdbID: "",
       tmdbID: "",
       viewType: "",
-      movieData : {},
+      movieData : {
+        posters: [],
+        backdrops: [],
+      },
       personData: {},
       apiData: {},
       profile : {
-        loginId: undefined,
+        loginId: undefined, // Kullanıcının giriş yapıp yapmadığını belirtir
         userId: undefined
-      },  
+      },
       basicListData : {},
       favoriteListCardVisible : false,
-      userListInfo : {
+      userListInfo : {},
+      userListInfoBase : {
         planned: {
           header:"İzleyeceklerim",
         }
@@ -26,6 +30,7 @@ const app = Vue.createApp({
       rateBox: {
         score: 0,
         hoverScore: 0,
+        visible: false,
       },
       videoBox : {
         iframe:undefined,
@@ -36,24 +41,85 @@ const app = Vue.createApp({
         top:100,
         left:100
       },
+      // Yeni eklenen zoom modal verileri
+      isZoomModalVisible: false,
+      currentZoomedImageSrc: '',
+      currentZoomedImageList: [],
+      currentZoomedImageIndex: 0,
+      // Yeni eklenen rastgele film ve arama verileri
+      randomMovieLoading: false,
+      isSearchVisible: false,
+      searchQuery: '',
+      searchResults: [],
+      searchTimeout: null, // Arama gecikmesi için
+      mainRowWidth:500,
+      screenWidth:1024,
+      screenLeftOffset:0,
+
+      // Sanatçılar sayfası için eklendi
+      randomPersonLoading: false,
+      isPersonSearchVisible: false,
+      personSearchQuery: '',
+      personSearchResults: [],
+
+      // Yeni altyazı verileri
+      subtitles: [],
+      isSubtitlePreviewModalVisible: false,
+      currentSubtitlePreviewContent: '',
     };
   },
-  mounted() {   
-    //TODO NOT YET IMPLEMENTED
-  
+  mounted() {
+    //NOT YET IMPLEMENTED
+    if(this.detailMode) {
+      const tabHeaders = document.querySelectorAll('.tab-header');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+          // Tüm sekme başlıklarından 'active' sınıfını kaldır
+          tabHeaders.forEach(h => h.classList.remove('active'));
+          // Tıklanan başlığa 'active' sınıfını ekle
+          this.classList.add('active');
+
+          // Tüm sekme içeriklerinden 'active' sınıfını kaldır
+          tabContents.forEach(content => content.classList.remove('active'));
+
+          // Tıklanan başlığın 'data-tab' özelliğinden hedef içeriğin ID'sini al
+          const targetTabId = this.dataset.tab;
+          // Hedef içeriği bul ve 'active' sınıfını ekle
+          document.getElementById(targetTabId).classList.add('active');
+
+          // Eğer altyazılar sekmesi aktifleşirse altyazıları çek
+          if (targetTabId === 'subtitles-tab' && this.imdbID) {
+              this.getSubtitles(this.imdbID);
+          }
+        }.bind(this)); // 'this' bağlamını korumak için bind kullanıldı
+      });
+
+      this.initSizeVariables();
+    }
+
   },
   created() {
-    let uri = window.location.search.substring(1); 
+    let uri = window.location.search.substring(1);
     let params = new URLSearchParams(uri);
     this.imdbID = params.get("id");
     this.detailMode = params.get("detail")  ? true : false;
-    if(this.imdbID[0] == 't' || this.imdbID[0] == 'n') {
+    console.log("haydar " + window.location.href);
+    if(!this.imdbID) {
+       if(window.location.href.indexOf("sanatcilar")>-1) {
+         this.loadRandomPerson();
+       } else {
+        this.loadRandomMovie();
+        }
+    } else if(this.imdbID[0] == 't' || this.imdbID[0] == 'n') {
       this.viewType = this.imdbID[0] == 't' ? 'movie':'person';
     } else {
       this.viewType = params.get("viewType");
       this.imdbID = undefined;
       this.tmdbID = params.get("id");
     }
+
     this.getSessionUser();
     if(this.viewType == 'movie') {
       if(this.imdbID) {
@@ -67,33 +133,68 @@ const app = Vue.createApp({
       } else {
         this.findTMDBPerson();
       }
-    } 
+    }
+
     if(this.detailMode) {
       window.top.addEventListener("click", this.clickEventHandler);
+      // Klavye olay dinleyicisi eklendi
+      window.top.addEventListener('keydown', this.handleKeyDown);
+      window.top.addEventListener("resize", this.resizeEventHandler);
     }
   },
+
+
+
   destroyed() {
     if(this.detailMode) {
       window.top.removeEventListener("click", this.clickEventHandler);
+      window.top.removeEventListener('keydown', this.handleKeyDown);
+      window.top.removeEventListener("resize", this.resizeEventHandler);
     }
   },
 
   methods: {
+
     clickEventHandler(e) {
       if(this.videoBox.visible) {
         if(e.target != this.videoBox.iframe) {
          this.showVideo();
         }
       }
-  },
+    },
+    handleKeyDown(event) {
+      if (this.isZoomModalVisible) {
+        if (event.key === 'ArrowLeft') {
+          this.navigateZoomedImage(-1);
+        } else if (event.key === 'ArrowRight') {
+          this.navigateZoomedImage(1);
+        } else if (event.key === 'Escape') {
+          this.closeZoomModal();
+        }
+      } else if (this.isSubtitlePreviewModalVisible) {
+          if (event.key === 'Escape') {
+              this.closeSubtitlePreviewModal();
+          }
+      }
+    },
+
+    initSizeVariables() {
+      this.mainRowWidth = document.getElementById('sinetayfa-mainRow').getBoundingClientRect().width;
+      this.screenWidth = window.innerWidth;
+      this.screenLeftOffset = parseInt((this.screenWidth-this.mainRowWidth)/2);
+    },
+
+    resizeEventHandler(e) {
+      this.initSizeVariables();
+    },
 
     initVideoBox() {
-      var iframe = window.document.getElementById('sineokur-detail-video-iframe');
+      var iframe = window.document.getElementById('sinetayfa-detail-video-iframe');
       if(iframe) {
           this.videoBox.iframe = iframe;
           this.videoBox.iframe.src = "https://www.youtube.com/embed/" + this.movieData.videoKey + "?controls=1&enablejsapi=1";
       }
-      
+
     },
 
     resizeVideo() {
@@ -103,14 +204,16 @@ const app = Vue.createApp({
       if(this.videoBox.width > 720) {
         this.videoBox.width = 720;
       }
-      this.videoBox.left = parseInt((screenWidth-this.videoBox.width)/2);
+      this.videoBox.left = parseInt((this.mainRowWidth-this.videoBox.width)/2);
       this.videoBox.height = parseInt(this.videoBox.width/2);
-      this.videoBox.top =  window.top.scrollY + parseInt((screenHeight-this.videoBox.height)/2);
+      //this.videoBox.top =  window.top.scrollY + parseInt((screenHeight-this.videoBox.height)/2);
+      this.videoBox.top =  parseInt((screenHeight-this.videoBox.height)/2) - 171;
+
     },
 
     showVideo() {
       if(!this.videoBox.iframe) {
-        return; 
+        return;
       }
       this.resizeVideo();
       if(!this.videoBox.visible) {
@@ -151,12 +254,12 @@ const app = Vue.createApp({
     rateBoxClick() {
       var rollbackScore = this.rateBox.score;
       this.rateBox.score = this.rateBox.hoverScore;
-      var fd = new FormData();  
+      var fd = new FormData();
       fd.append('userId', this.profile.userId);
       fd.append('imdbId', this.imdbID);
       fd.append('userRating', this.rateBox.score);
       axios.post(this.getBaseUrl() + 'services/updateUserRating.php', fd).then(
-        resp => {	 
+        resp => {
           this.fillRateBoxData();
         }
       ).catch((err) => {
@@ -165,41 +268,70 @@ const app = Vue.createApp({
       }).finally(()=> {
         //
       });
+        this.rateBox.visible = false;
     },
 
     getSessionUser() {
-      var fd = new FormData();  
+      var fd = new FormData();
       axios.get(this.getBaseUrl() + 'services/getSessionUser.php', fd).then(
-        resp => {	
+        resp => {
           if(resp.data.userId && parseInt(resp.data.userId) > 1) {
             this.profile.userId = resp.data.userId;
             this.profile.loginId = resp.data.userId;
-            this.refresh();
+            this.getUserListMetaListBasic();
           }
         }).catch((err) => {
           console.error(err);
           //this.profile.userId = 2;
           //this.profile.loginId = 2;
-          this.refresh();
+          //this.getUserListMetaListBasic();
         }
       )
     },
+
+    getUserListMetaListBasic() {
+      this.userListInfo = {};
+      this.userListInfo["planned"] = this.userListInfoBase.planned;
+      var fd = new FormData();
+      fd.append('userId', this.profile.userId);
+      axios.post(this.getBaseUrl() + 'services/getUserListMetaListBasic.php', fd).then(
+        resp => {
+          if(resp.data.listData) {
+            for(var i=0; i<resp.data.listData.length; i++) {
+              this.userListInfo[resp.data.listData[i].listId] = {
+                header : resp.data.listData[i].header,
+              }
+            }
+          }
+          this.refresh();
+
+        }
+      ).catch((err) => {
+        console.error(err);
+        this.refresh();
+      }).finally(()=> {
+        //
+      });
+    },
+
+
 
     refresh() {
       if(this.viewType == 'movie' || this.viewType == 'person') {
         this.fillBasicListData();
       }
-      if(this.detailMode) {
+      //if(this.detailMode) {
+      //if(this.viewType == 'movie') {
         this.fillRateBoxData();
-      }
+      //}
     },
 
     fillBasicListData() {
-      var fd = new FormData();  
+      var fd = new FormData();
       fd.append('userId', this.profile.userId);
       fd.append('imdbId', this.imdbID);
       axios.post(this.getBaseUrl() + 'services/getListDataById.php', fd).then(
-        resp => {	
+        resp => {
           this.basicListData = {};
           for(var i=0; i<resp.data.listData.length; i++) {
             this.basicListData[resp.data.listData[i].listId] = true;
@@ -208,15 +340,15 @@ const app = Vue.createApp({
         }
       ).catch((err) => {
         console.error(err);
-      });	
+      });
     },
 
     fillRateBoxData() {
-      var fd = new FormData();  
+      var fd = new FormData();
       fd.append('userId', this.profile.userId);
       fd.append('imdbId', this.imdbID);
       axios.post(this.getBaseUrl() + 'services/getUserRating.php', fd).then(
-        resp => {	
+        resp => {
           this.rateBox.score = resp.data.userRatingData.userRating ? resp.data.userRatingData.userRating : 0;
           this.rateBox.hoverScore = this.rateBox.score;
           this.rateBox.forumScore = resp.data.userRatingData.score ? resp.data.userRatingData.score : 0;
@@ -224,7 +356,7 @@ const app = Vue.createApp({
         }
       ).catch((err) => {
         console.error(err);
-      });	
+      });
     },
 
     fillMovieListIcon() {
@@ -243,28 +375,30 @@ const app = Vue.createApp({
 
     favorite(listId, listId2, cycle=1) {
       this.basicListData[listId] = cycle > 1 ? false : !this.basicListData[listId];
-      var fd = new FormData();  
+      var fd = new FormData();
       fd.append('userId', this.profile.userId);
       fd.append('imdbId', this.imdbID);
       fd.append('listId', listId);
       fd.append('imdbType', this.viewType);
       if(this.viewType == 'movie') {
-        fd.append('poster', this.movieData.poster);     
-        fd.append('title', this.movieData.title);     
-        fd.append('year', this.movieData.year);     
-        fd.append('runtime', this.movieData.runtime);     
-        fd.append('imdbRating', this.movieData.imdbRating);     
-        fd.append('imdbVotes', this.movieData.imdbVotes);   
-        fd.append('movieType', this.movieData.type);   
+        fd.append('poster', this.movieData.poster);
+        fd.append('title', this.movieData.title);
+        fd.append('year', this.movieData.year);
+        fd.append('runtime', this.movieData.runtime);
+        fd.append('imdbRating', this.movieData.imdbRating);
+        fd.append('imdbVotes', this.movieData.imdbVotes);
+        fd.append('movieType', this.movieData.type);
+        fd.append('titleTr', this.movieData.title_tr);
+        fd.append('director', this.movieData.director);
       } else {
-        fd.append('personType', this.personData.type);     
-        fd.append('name', this.personData.name);     
-        fd.append('placeOfBirth', this.personData.place_of_birth);     
-        fd.append('birthday', this.personData.birthday);    
-        fd.append('profilePath', this.personData.profile_path);    
+        fd.append('personType', this.personData.type);
+        fd.append('name', this.personData.name);
+        fd.append('placeOfBirth', this.personData.place_of_birth);
+        fd.append('birthday', this.personData.birthday);
+        fd.append('profilePath', this.personData.profile_path);
       }
       axios.post(cycle > 1 ? this.getBaseUrl()+'services/deleteListData.php':(this.basicListData[listId]?this.getBaseUrl()+'services/insertListData.php':this.getBaseUrl()+'services/deleteListData.php'), fd).then(
-        resp => {	 
+        resp => {
           this.fillMovieListIcon();
         }
       ).catch((err) => {
@@ -275,14 +409,18 @@ const app = Vue.createApp({
           this.favorite(listId2, undefined, 2);
         }
       });
-     
+
     },
 
     showListMenu() {
       this.favoriteListCardVisible = !this.favoriteListCardVisible;
     },
-    
-    
+
+    showScoreMenu() {
+      this.rateBox.visible = !this.rateBox.visible;
+    },
+
+
     checkNaN(text) {
       return !text || text.toString().indexOf("N/A") > -1 || text === 'NaN.NaN.NaN';
     },
@@ -322,13 +460,13 @@ const app = Vue.createApp({
         } else {
           return text;
         }
-      } else if(type == 'tmdb-poster' || type == 'tmdb-poster-detail-min') {
+      } else if(type == 'tmdb-poster' || type == 'tmdb-poster-detail-min' || type == 'tmdb-image') {
         return !this.checkNaN(text)?"http://image.tmdb.org/t/p/w500" + text:this.getDefaultImage(type);
+      } else if (type == 'tmdb-backdrop') {
+        return !this.checkNaN(text) ? "https://image.tmdb.org/t/p/w1280" + text : this.getDefaultImage(type);
       }
-      
-      
       else {
-        return !this.checkNaN(text) ? text : "- "; 
+        return !this.checkNaN(text) ? text : "- ";
       }
     },
 
@@ -339,7 +477,7 @@ const app = Vue.createApp({
         return this.getBaseUrl() + 'images/default_160x240.svg'
       }
     },
-  
+
     retrieveBirthAndDeathDay(birthday, deathday, type) {
       if(!this.checkNaN(birthday)) {
         if(birthday.length == 10) {
@@ -404,7 +542,7 @@ const app = Vue.createApp({
      } else if(source == 'tmdb-error') {
         this.movieData.title_tr = this.movieData.title;
         this.movieData.poster = this.retrieve(this.movieData.omdb_poster, 'poster');
-        this.movieData.director = this.checkNaN(this.movieData.omdb_director) && this.movieData.type == 'series' ? 'Farklı yönetmenler' : this.movieData.director; 
+        this.movieData.director = this.checkNaN(this.movieData.omdb_director) && this.movieData.type == 'series' ? 'Farklı yönetmenler' : this.movieData.director;
       } else if(source == 'tmdb-movie-cast') {
         this.movieData.personList = [];
         for(var i=0; i<this.apiData.crew.length; i++) {
@@ -439,7 +577,7 @@ const app = Vue.createApp({
           this.personData.profile_path = this.retrieve(this.apiData.profile_path, 'tmdb-poster');
           this.personData.biography = this.retrieve(this.apiData.biography);
         } else if(source == 'tmdb-person-movies') {
-          if(this.apiData.cast && this.apiData.cast.length > 0) {
+          if((this.apiData.cast && this.apiData.cast.length > 0)||(this.apiData.crew && this.apiData.crew.length > 0)) {
             var maxLength = 400;
             var currentLength = 0;
             var movies = [];
@@ -451,28 +589,58 @@ const app = Vue.createApp({
               };
               movies.push(moviesData);
               // () ,
-              currentLength = currentLength + moviesData.original_title.length + 
-                moviesData.character.length + 
+              currentLength = currentLength + moviesData.original_title.length +
+                moviesData.character.length +
                 (moviesData.character.trim() === '-'?0:moviesData.character.length) +
                 (this.personData.type==='YÖNETMEN' || moviesData.character.trim() === '-'?2:5);
               if(currentLength>maxLength) {
                 break;
               }
             }
+            //check for crew
+            if(currentLength<maxLength && this.personData.type==='YÖNETMEN') {
+              for(index=0; index<this.apiData.crew.length; index++) {
+                if(this.apiData.crew[index].department === "Directing") {
+                  var moviesData = {
+                    original_title : this.retrieve(this.apiData.crew[index].original_title)
+                  };
+                  movies.push(moviesData);
+                  // () ,
+                  currentLength = currentLength + moviesData.original_title.length + 2;
+                  if(currentLength>maxLength) {
+                    break;
+                  }
+                }
+              }
+            }
+
             this.personData.movies = movies;
-            this.personData.moviesOverflowLink = index != this.apiData.cast.length;
+            this.personData.moviesOverflowLink = currentLength>maxLength;
 
             //all movies
             if(this.detailMode) {
               this.personData.movieList = [];
               for(index=0; index<this.apiData.cast.length; index++) {
                 var movieData = {
-                  title : this.retrieve(this.apiData.cast[index].title), 
-                  original_title : this.retrieve(this.apiData.cast[index].original_title), 
+                  title : this.retrieve(this.apiData.cast[index].title),
+                  original_title : this.retrieve(this.apiData.cast[index].original_title),
                   poster : this.retrieve(this.apiData.cast[index].poster_path, 'tmdb-poster-detail-min'),
                   id : this.apiData.cast[index].id,
                 }
                 this.personData.movieList.push(movieData);
+              }
+              if(this.apiData.crew  && this.personData.type==='YÖNETMEN') {
+                for(index=0; index<this.apiData.crew.length; index++) {
+                  if(this.apiData.crew[index].department === "Directing") {
+                    var movieData = {
+                      title : this.retrieve(this.apiData.crew[index].title),
+                      original_title : this.retrieve(this.apiData.crew[index].original_title),
+                      poster : this.retrieve(this.apiData.crew[index].poster_path, 'tmdb-poster-detail-min'),
+                      id : this.apiData.crew[index].id,
+                    }
+                    this.personData.movieList.push(movieData);
+                  }
+                }
               }
             }
           } else {
@@ -499,9 +667,23 @@ const app = Vue.createApp({
                   }
                 }
               }
-              this.movieData.videoKey = found; 
+              this.movieData.videoKey = found;
             }
             this.initVideoBox();
+          }
+        } else if (source == 'tmdb-movie-images') {
+          this.movieData.posters = [];
+          if (this.apiData.posters && this.apiData.posters.length > 0) {
+            for (let i = 0; i < this.apiData.posters.length; i++) {
+              this.movieData.posters.push(this.retrieve(this.apiData.posters[i].file_path, 'tmdb-image'));
+            }
+          }
+
+          this.movieData.backdrops = [];
+          if (this.apiData.backdrops && this.apiData.backdrops.length > 0) {
+            for (let i = 0; i < this.apiData.backdrops.length; i++) {
+              this.movieData.backdrops.push(this.retrieve(this.apiData.backdrops[i].file_path, 'tmdb-backdrop'));
+            }
           }
         }
     },
@@ -515,7 +697,7 @@ const app = Vue.createApp({
           "i" : this.imdbID,
           "apikey": this.omdb_api_key
         }
-      }).then(response => {	
+      }).then(response => {
         this.apiData = response.data;
         this.fillMovieData('omdb');
       }).catch((err) => {
@@ -534,7 +716,7 @@ const app = Vue.createApp({
         headers: {
           "content-type":"application/json"
         }
-      }).then(response => {	
+      }).then(response => {
         this.apiData = response.data;
         this.fillMovieData('tmdb');
       }).catch((err) => {
@@ -548,6 +730,7 @@ const app = Vue.createApp({
         }
         if(this.tmdbID && this.viewType == 'movie' && this.detailMode) {
           this.getTMDBMovieVideos();
+          this.getTMDBMovieImages();
         }
       });
     },
@@ -562,7 +745,7 @@ const app = Vue.createApp({
         headers: {
           "content-type":"application/json"
         }
-      }).then(response => {	
+      }).then(response => {
         if(response.data.person_results && response.data.person_results.length>0) {
           this.tmdbID = response.data.person_results[0].id;
           this.findTMDBPerson();
@@ -572,7 +755,7 @@ const app = Vue.createApp({
       }).finally(()=> {});
     },
 
-    
+
     findIMDBMovieId() {
       axios.get('https://api.themoviedb.org/3/movie/' + this.tmdbID, {
         params: {
@@ -582,14 +765,14 @@ const app = Vue.createApp({
         headers: {
           "content-type":"application/json"
         }
-      }).then(response => {	
+      }).then(response => {
         this.imdbID = response.data.imdb_id;
         this.getOMDBMovieDetail();
       }).catch((err) => {
         console.error(err);
       }).finally(()=> {});
     },
-    
+
 
     findTMDBPerson() {
       axios.get('https://api.themoviedb.org/3/person/' + this.tmdbID, {
@@ -600,7 +783,7 @@ const app = Vue.createApp({
         headers: {
           "content-type":"application/json"
         }
-      }).then(response => {	
+      }).then(response => {
         this.apiData = response.data;
         this.fillMovieData('tmdb-person');
         this.findTMDBPersonMovies();
@@ -618,7 +801,7 @@ const app = Vue.createApp({
         headers: {
           "content-type":"application/json"
         }
-      }).then(response => {	
+      }).then(response => {
         this.apiData = response.data;
         this.fillMovieData('tmdb-person-movies');
       }).catch((err) => {
@@ -637,7 +820,7 @@ const app = Vue.createApp({
         headers: {
           "content-type":"application/json"
         }
-      }).then(response => {	
+      }).then(response => {
         this.apiData = response.data;
         this.fillMovieData('tmdb-movie-cast');
       }).catch((err) => {
@@ -654,11 +837,28 @@ const app = Vue.createApp({
         headers: {
           "content-type":"application/json"
         }
-      }).then(response => {	
+      }).then(response => {
         this.apiData = response.data;
         this.fillMovieData('tmdb-movie-videos');
       }).catch((err) => {
         console.error(err);
+      });
+    },
+
+    getTMDBMovieImages() {
+      axios.get('https://api.themoviedb.org/3/movie/' + this.tmdbID + '/images', {
+        params: {
+          "api_key": this.tmdb_api_key,
+          "include_image_language": "en,null,tr"
+        },
+        headers: {
+          "content-type": "application/json"
+        }
+      }).then(response => {
+        this.apiData = response.data;
+        this.fillMovieData('tmdb-movie-images');
+      }).catch((err) => {
+        console.error("TMDB görselleri çekilirken hata oluştu:", err);
       });
     },
 
@@ -677,12 +877,275 @@ const app = Vue.createApp({
         for(var i=0; i<iframeList.length; i++) {
           var scrollHeight = iframeList[i].contentWindow.document.body.scrollHeight;
           var scrollWidth = iframeList[i].contentWindow.document.body.scrollWidth;
-          console.log("haydar " + scrollHeight + " , " + scrollWidth );
-          iframeList[i].style.height =  (scrollHeight<=240?270:scrollHeight + 30) + 'px';
-          iframeList[i].style.width =  ((scrollWidth<=540?570:scrollWidth) + 30) + 'px';
+          //console.log("haydar " + scrollHeight + " , " + scrollWidth );
+          iframeList[i].style.height =  (scrollHeight<=270?300:scrollHeight + 30) + 'px';
+          iframeList[i].style.width =  ((scrollWidth<=570?600:scrollWidth) + 30) + 'px';
         }
       }
-      
+
+    },
+
+
+
+    // --- Yeni Zoom Modal Metotları ---
+    openZoomModal(src, imageList, index) {
+      this.currentZoomedImageSrc = src;
+      this.currentZoomedImageList = imageList;
+      this.currentZoomedImageIndex = index;
+      this.isZoomModalVisible = true;
+    },
+
+    closeZoomModal() {
+      this.isZoomModalVisible = false;
+      this.currentZoomedImageSrc = '';
+      this.currentZoomedImageList = [];
+      this.currentZoomedImageIndex = 0;
+    },
+
+    navigateZoomedImage(direction) {
+      let newIndex = this.currentZoomedImageIndex + direction;
+      const totalImages = this.currentZoomedImageList.length;
+
+      if (totalImages === 0) {
+        return;
+      }
+
+      if (newIndex < 0) {
+        newIndex = totalImages - 1; // Başa sar
+      } else if (newIndex >= totalImages) {
+        newIndex = 0; // Sona sar
+      }
+
+      this.currentZoomedImageIndex = newIndex;
+      this.currentZoomedImageSrc = this.currentZoomedImageList[newIndex];
+    },
+
+    // --- Yeni Arama Metotları ---
+    toggleSearch() {
+      this.isSearchVisible = !this.isSearchVisible;
+      this.searchQuery = '';
+      this.searchResults = [];
+      if (!this.isSearchVisible && this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      } else if (this.isSearchVisible) {
+        // Arama kutusu açıldığında input'a odaklan
+        this.$nextTick(() => {
+          if (this.$refs.searchInput) {
+            this.$refs.searchInput.focus();
+          }
+        });
+      }
+    },
+
+    async searchMovies() {
+      if (!this.searchQuery.trim()) {
+        this.searchResults = [];
+        return;
+      }
+
+      // IMDb ID ile arama yapma kontrolü (tt ile başlıyorsa)
+      if (this.searchQuery.trim().toLowerCase().startsWith('tt') && this.searchQuery.trim().length >= 9) { // IMDb ID'ler genellikle tt ile başlar ve 9-10 karakterdir
+        try {
+          const response = await axios.get('https://api.themoviedb.org/3/find/' + this.searchQuery.trim(), {
+            params: {
+              "api_key": this.tmdb_api_key,
+              "external_source": "imdb_id"
+            },
+            headers: {
+              "content-type": "application/json"
+            }
+          });
+          if (response.data.movie_results && response.data.movie_results.length > 0) {
+            this.searchResults = response.data.movie_results.map(movie => ({
+              id: movie.id,
+              title: movie.title,
+              original_title: movie.original_title,
+              poster_path: movie.poster_path,
+              release_date: movie.release_date,
+              type: 'movie'
+            }));
+          } else {
+            this.searchResults = [];
+          }
+        } catch (error) {
+          console.error("IMDb ID ile arama yapılırken hata oluştu:", error);
+          this.searchResults = [];
+        }
+        return;
+      }
+
+      // Metin ile arama (Türkçe ve orijinal başlıklar için)
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      }
+      this.searchTimeout = setTimeout(async () => {
+        try {
+          const [turkishResponse, originalResponse] = await Promise.all([
+            axios.get('https://api.themoviedb.org/3/search/movie', {
+              params: {
+                "api_key": this.tmdb_api_key,
+                "language": "tr-TR", // Türkçe başlıklar için
+                "query": this.searchQuery.trim()
+              }
+            }),
+            axios.get('https://api.themoviedb.org/3/search/movie', {
+              params: {
+                "api_key": this.tmdb_api_key,
+                "language": "en-US", // Orijinal başlıklar genellikle İngilizce
+                "query": this.searchQuery.trim()
+              }
+            })
+          ]);
+
+          let combinedResults = {};
+          turkishResponse.data.results.forEach(movie => {
+            combinedResults[movie.id] = {
+              id: movie.id,
+              title: movie.title,
+              original_title: movie.original_title,
+              poster_path: movie.poster_path,
+              release_date: movie.release_date,
+              type: 'movie'
+            };
+          });
+          originalResponse.data.results.forEach(movie => {
+            if (!combinedResults[movie.id]) { // Zaten eklenmemişse ekle
+              combinedResults[movie.id] = {
+                id: movie.id,
+                title: movie.title,
+                original_title: movie.original_title,
+                poster_path: movie.poster_path,
+                release_date: movie.release_date,
+                type: 'movie'
+              };
+            }
+          });
+
+          this.searchResults = Object.values(combinedResults);
+
+        } catch (error) {
+          console.error("Film araması yapılırken hata oluştu:", error);
+          this.searchResults = [];
+        }
+      }, 500); // 300ms gecikme ile arama yap
+    },
+
+
+    loadMovie(id) {
+      var url = "https://sinetayfa.com/app.php/filmler?detail=1&viewType=movie&id=" + id;
+      window.location.href = url;
+    },
+
+
+    loadPerson(id) {
+      var url = "https://sinetayfa.com/sanatcilar?detail=1&viewType=person&id=" + id;
+      window.location.href = url;
+    },
+
+    async selectSearchResult(movie) {
+      this.toggleSearch(); // Arama kutusunu kapat
+      this.loadMovie(movie.id);
+    },
+
+    // --- Yeni Rastgele Film Metodu ---
+    async loadRandomMovie() {
+      this.randomMovieLoading = true;
+      console.log("loadRandomMovie: Yeni rastgele film yükleniyor...");
+      try {
+        const randomPage = Math.floor(Math.random() * 500) + 1;
+        const response = await axios.get('https://api.themoviedb.org/3/discover/movie', {
+          params: {
+            "api_key": this.tmdb_api_key,
+            "language": "tr-TR", // Türkçe başlıklar için
+            "sort_by": "popularity.desc",
+            "page": randomPage
+          }
+        });
+
+        if (response.data.results && response.data.results.length > 0) {
+          const randomIndex = Math.floor(Math.random() * response.data.results.length);
+          const randomMovie = response.data.results[randomIndex];
+          console.log("loadRandomMovie: Rastgele seçilen TMDB ID:", randomMovie.id);
+          this.loadMovie(randomMovie.id);
+        } else {
+          console.warn("Rastgele film bulunamadı, tekrar deneniyor...");
+          // Film bulunamazsa tekrar dene (çok nadir olmalı)
+          this.loadRandomMovie();
+        }
+      } catch (error) {
+        console.error("Rastgele film çekilirken hata oluştu:", error);
+      } finally {
+        this.randomMovieLoading = false;
+      }
+    },
+
+
+    async loadRandomPerson() {
+      this.randomPersonLoading = true;
+      try {
+        let randomPersonId = await this.getRandomPersonId();
+        if (randomPersonId) {
+          this.loadPerson(randomPersonId);
+        } else {
+          console.warn("Rastgele sanatçı bulunamadı, tekrar deneniyor...");
+          // Film bulunamazsa tekrar dene (çok nadir olmalı)
+          this.loadRandomPerson();
+        }
+      } catch (error) {
+        console.error("Rastgele sanatçı getirilirken hata oluştu:", error);
+      } finally {
+        this.randomPersonLoading = false;
+      }
+    },
+
+    async getRandomPersonId() {
+      const page = Math.floor(Math.random() * 100) + 1; // İlk 100 sayfadan rastgele bir sayfa seç
+      const url = `https://api.themoviedb.org/3/person/popular?api_key=${this.tmdb_api_key}&language=tr-TR&page=${page}`;
+      const response = await axios.get(url);
+      const persons = response.data.results;
+      if (persons.length > 0) {
+        const randomIndex = Math.floor(Math.random() * persons.length);
+        return persons[randomIndex].id;
+      }
+      return null;
+    },
+
+
+    // Sanatçı arama ve rastgele sanatçı getirme işlevleri
+    togglePersonSearch() {
+      this.isPersonSearchVisible = !this.isPersonSearchVisible;
+      this.personSearchQuery = '';
+      this.personSearchResults = [];
+      if (!this.isPersonSearchVisible && this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      } else if (this.isPersonSearchVisible) {
+        this.$nextTick(() => this.$refs.personSearchInput.focus());
+      }
+    },
+
+    async searchPersons() {
+      if (this.personSearchQuery.length < 3) {
+        this.personSearchResults = [];
+        return;
+      }
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      }
+      this.searchTimeout = setTimeout(async () => {
+        try {
+          const url = `https://api.themoviedb.org/3/search/person?api_key=${this.tmdb_api_key}&language=tr-TR&query=${encodeURIComponent(this.personSearchQuery)}`;
+          const response = await axios.get(url);
+          this.personSearchResults = response.data.results.filter(person => person.profile_path).slice(0, 10); // Sadece profil fotoğrafı olanları göster ve ilk 10 sonuç
+        } catch (error) {
+          console.error("Sanatçı araması yapılırken hata oluştu:", error);
+          this.personSearchResults = [];
+        }
+      }, 500);
+    },
+
+    async selectPersonSearchResult(person) {
+      this.togglePersonSearch(); // Arama kutusunu kapat
+      this.loadPerson(person.id);
     },
 
     convertCountry(country) {
@@ -884,7 +1347,7 @@ const app = Vue.createApp({
       "Zimbabwe":"Zimbabve"
       };
       return this.multiReplace(country,mapObj);
-    }, 
+    },
 
     convertGenre (genre) {
       var mapObj = {
@@ -912,10 +1375,174 @@ const app = Vue.createApp({
       return this.multiReplace(genre,mapObj);
     },
 
-    
+    // --- Yeni Altyazı Metotları ---
+    async getSubtitles(imdbId) {
+        this.subtitles = []; // Önceki altyazıları temizle
+        if (!imdbId) {
+            console.warn("IMDb ID bulunamadı, altyazılar çekilemiyor.");
+            return;
+        }
+
+        try {
+            // OpenSubtitles API'sine login isteği
+            const loginResponse = await axios.post('https://api.opensubtitles.com/api/v1/login', {
+                username: 'svsknr', // Buraya OpenSubtitles kullanıcı adınızı girin
+                password: 'svsknr82'  // Buraya OpenSubtitles şifrenizi girin
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Api-Key': this.opensubtitles_api_key
+                }
+            });
+
+            const token = loginResponse.data.token;
+            console.log("OpenSubtitles Token:", token);
+
+            // Altyazı arama isteği
+            const searchResponse = await axios.get(`https://api.opensubtitles.com/api/v1/subtitles`, {
+                params: {
+                    imdb_id: imdbId.replace('tt', ''), // 'tt' ön ekini kaldır
+                    languages: 'tr', // Sadece Türkçe altyazıları ara
+                    order_by: 'download_count', // İndirme sayısına göre sırala
+                    order_direction: 'desc'
+                },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Api-Key': this.opensubtitles_api_key,
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            this.subtitles = searchResponse.data.data;
+            console.log("Altyazılar:", this.subtitles);
+
+        } catch (error) {
+            console.error("Altyazılar çekilirken hata oluştu:", error);
+            // Hata durumunda kullanıcıya bilgi verebilirsiniz
+            // this.showCustomAlert("Altyazılar yüklenirken bir hata oluştu.");
+        }
+    },
+
+    async downloadSubtitle(subtitle) {
+        if (!this.profile.loginId) {
+            // Kullanıcı giriş yapmamışsa uyarı göster
+            this.showCustomAlert("Altyazı indirmek için giriş yapmalısınız.");
+            return;
+        }
+
+        try {
+            // OpenSubtitles API'sine login isteği
+            const loginResponse = await axios.post('https://api.opensubtitles.com/api/v1/login', {
+                username: 'svsknr', // Buraya OpenSubtitles kullanıcı adınızı girin
+                password: 'svsknr82'  // Buraya OpenSubtitles şifrenizi girin
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Api-Key': this.opensubtitles_api_key
+                }
+            });
+
+            const token = loginResponse.data.token;
+
+            // Altyazı indirme isteği
+            const downloadResponse = await axios.post('https://api.opensubtitles.com/api/v1/download', {
+                file_id: subtitle.id
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Api-Key': this.opensubtitles_api_key,
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const downloadLink = downloadResponse.data.link;
+            const fileName = subtitle.attributes.filename;
+
+            // İndirme linkini kullanarak dosyayı indir
+            const a = document.createElement('a');
+            a.href = downloadLink;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            console.log("Altyazı indirildi:", fileName);
+
+        } catch (error) {
+            console.error("Altyazı indirilirken hata oluştu:", error);
+            this.showCustomAlert("Altyazı indirilirken bir hata oluştu.");
+        }
+    },
+
+    async previewSubtitle(subtitle) {
+        if (!this.profile.loginId) {
+            // Kullanıcı giriş yapmamışsa uyarı göster
+            this.showCustomAlert("Altyazıyı önizlemek için giriş yapmalısınız.");
+            return;
+        }
+
+        try {
+            // OpenSubtitles API'sine login isteği
+            const loginResponse = await axios.post('https://api.opensubtitles.com/api/v1/login', {
+                username: 'svsknr', // Buraya OpenSubtitles kullanıcı adınızı girin
+                password: 'svsknr82'  // Buraya OpenSubtitles şifrenizi girin
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Api-Key': this.opensubtitles_api_key
+                }
+            });
+
+            const token = loginResponse.data.token;
+
+            // Altyazı içeriğini çekme isteği
+            const response = await axios.get(subtitle.attributes.url, {
+                headers: {
+                    'Accept': 'text/plain', // SRT formatında metin olarak al
+                    'Api-Key': this.opensubtitles_api_key,
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            this.currentSubtitlePreviewContent = response.data;
+            this.isSubtitlePreviewModalVisible = true;
+
+        } catch (error) {
+            console.error("Altyazı önizlenirken hata oluştu:", error);
+            this.showCustomAlert("Altyazı önizlenirken bir hata oluştu.");
+        }
+    },
+
+    closeSubtitlePreviewModal() {
+        this.isSubtitlePreviewModalVisible = false;
+        this.currentSubtitlePreviewContent = '';
+    },
+
+    // Özel uyarı kutusu göstermek için yardımcı fonksiyon
+    showCustomAlert(message) {
+        const customAlertOverlay = document.getElementById('customAlertOverlay');
+        const customAlertBox = document.getElementById('customAlertBox');
+        const customAlertMessage = customAlertBox.querySelector('p');
+        const customAlertCloseBtn = document.getElementById('customAlertCloseBtn');
+        const customAlertTitle = customAlertBox.querySelector('h2');
+
+        customAlertTitle.textContent = "Uyarı!";
+        customAlertTitle.style.color = "#dc2626"; // Kırmızı renk
+        customAlertMessage.textContent = message;
+
+        customAlertOverlay.style.opacity = '1';
+        customAlertOverlay.style.visibility = 'visible';
+        customAlertBox.style.transform = 'scale(1)';
+
+        customAlertCloseBtn.onclick = () => {
+            customAlertOverlay.style.opacity = '0';
+            customAlertOverlay.style.visibility = 'hidden';
+            customAlertBox.style.transform = 'scale(0.9)';
+        };
+    },
   },
   computed: {
-   
+
   },
 
 });

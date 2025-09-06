@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="33" height="33" id="katman_2" data-name="katman 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 59.08 59.2">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #ef7d53;
+        stroke-miterlimit: 8;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        fill: none;
+      }
+
+      .cls-5 {
+        fill: #fff;
+        fill-rule: evenodd;
+      }
+
+      .cls-6 {
+        clip-path: url(#clippath-3);
+      }
+
+      .cls-7 {
+        fill: #ef7d53;
+      }
+
+      .cls-3, .cls-4 {
+        clip-rule: evenodd;
+      }
+
+      .cls-8 {
+        clip-path: url(#clippath-2);
+      }
+
+      .cls-4 {
+        clip-path: url(#clippath-1);
+      }
+
+      .cls-9 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <polygon class="cls-3" points=".02 59.18 59.06 59.18 59.06 .02 .02 .02 .02 59.18 .02 59.18"/>
+    </clipPath>
+    <clipPath id="clippath-1">
+      <polygon class="cls-3" points=".02 59.18 59.06 59.18 59.06 .02 .02 .02 .02 59.18 .02 59.18"/>
+    </clipPath>
+    <clipPath id="clippath-2">
+      <polygon class="cls-4" points="7.82 7.82 51.38 7.82 51.38 51.38 7.82 51.38 7.82 7.82 7.82 7.82"/>
+    </clipPath>
+    <clipPath id="clippath-3">
+      <polygon class="cls-2" points="7.82 51.38 51.38 51.38 51.38 7.82 7.82 7.82 7.82 51.38 7.82 51.38"/>
+    </clipPath>
+  </defs>
+  <g id="katman_1" data-name="katman 1">
+    <g>
+      <path class="cls-5" d="M.5,29.6C.5,13.53,13.5.5,29.54.5s29.04,13.03,29.04,29.1-13,29.1-29.04,29.1S.5,45.67.5,29.6h0Z"/>
+      <path class="cls-1" d="M.5,29.6C.5,13.53,13.5.5,29.54.5s29.04,13.03,29.04,29.1-13,29.1-29.04,29.1S.5,45.67.5,29.6h0Z"/>
+      <g class="cls-9">
+        <g class="cls-8">
+          <g class="cls-6">
+            <path class="cls-7" d="M19.48,40.15c.9.9.9,2.29,0,3.18l-3.81,1.26-.67-.67,1.26-3.81c.94-.85,2.33-.85,3.23.04h0ZM37.1,16.74l-22.42,22.46-2.82,8.52,8.56-2.82,22.42-22.42"/>
+            <path class="cls-7" d="M47.23,15.53l-3.18-3.18c-.72-.72-1.84-.72-2.56,0l-3.14,3.14,5.69,5.69,3.14-3.14c.76-.67.76-1.79.04-2.51h0Z"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

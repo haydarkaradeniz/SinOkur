@@ -14,13 +14,15 @@
     
     <div id="app">
 		
-      <div v-if="viewType == 'movie'" class="movie-card">
+      <div v-if="viewType == 'movie'" class="movie-card" :style="{'background-image':'url('+getBaseUrl()+'images/' + parseInt(rateBox.score) + '.svg)'}">
         <table>
           <tr>
             <td class="movie-poster-td" rowspan="3">
               <a :href="subPath+'/app.php/filmler?detail=1&id='+imdbID" target="_parent"><img :src="movieData.poster" class="movie-poster"/></a>
               <img v-if="profile.loginId" :src="basicListData[getFavoriteListId()]?'images/favori_aktif.svg':'images/favori_pasif.svg'" class="movie-favorite-ico" @click="favorite(getFavoriteListId(), undefined)"/>
               <img v-if="profile.loginId" :src="basicListData['watched']?'images/izledim.svg':'images/izlemedim.svg'" class="movie-watched-ico" @click="favorite('watched',!basicListData['watched']?'planned':undefined)"/>
+
+              <img v-if="profile.loginId" :src="rateBox.score?'images/puan_aktif.svg':'images/puan_pasif.svg'" class="movie-score-ico" @click="showScoreMenu()"/>
               <img v-if="profile.loginId" :src="basicListData['movieListIcon']?'images/liste_aktif.svg':'images/liste_pasif.svg'" class="movie-list-ico" @click="showListMenu()"/>		
               
               <div v-if="favoriteListCardVisible" class="fovorite-list-card">
@@ -28,9 +30,20 @@
                   <img :src="basicListData[listKey]?'images/tick_aktif.svg':'images/tick_pasif.svg'" class="movie-list-header-ico" @click="favorite(listKey, !basicListData[listKey] && listKey=='planned'?'watched':undefined)"/>
                   <span class="movie-favorite-list-header">{{userListInfo[listKey].header}}</span>
                 </div>
+              </div>	
+              <div v-if="rateBox.visible" class="score-list-card">
 
 
-              </div>						
+                <div class="rate-box-img-div">
+                  <img class="rate-star" :src="rateBoxStarUrl(1)" @mousemove="rateBoxMouseMove($event,1)" @mouseleave="rateBox.hoverScore = rateBox.score" @click="rateBoxClick()"/>
+                  <img class="rate-star" :src="rateBoxStarUrl(2)" @mousemove="rateBoxMouseMove($event,2)" @mouseleave="rateBox.hoverScore = rateBox.score" @click="rateBoxClick()"/>
+                  <img class="rate-star" :src="rateBoxStarUrl(3)" @mousemove="rateBoxMouseMove($event,3)" @mouseleave="rateBox.hoverScore = rateBox.score" @click="rateBoxClick()"/>
+                  <img class="rate-star" :src="rateBoxStarUrl(4)" @mousemove="rateBoxMouseMove($event,4)" @mouseleave="rateBox.hoverScore = rateBox.score" @click="rateBoxClick()"/>
+                  <img class="rate-star" :src="rateBoxStarUrl(5)" @mousemove="rateBoxMouseMove($event,5)" @mouseleave="rateBox.hoverScore = rateBox.score" @click="rateBoxClick()"/>
+                </div>
+                
+
+              </div>					
             </td>
             <td>
               <div class="movie-title-tr">{{movieData.title_tr}}</div>
@@ -96,14 +109,9 @@
               </div>
             </td>
           </tr>
-
-
-
         </table>
       </div>
-
-    
-	  </div>
+      </div>
 
     <script src="scripts/app.js"></script>
     <script language="Javascript">

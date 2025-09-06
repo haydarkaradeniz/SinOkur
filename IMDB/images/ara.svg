@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="katman_2" width="37" data-name="katman 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 59.08 59.2">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #ef7d53;
+        stroke-miterlimit: 8;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        fill: none;
+      }
+
+      .cls-5 {
+        fill: #fff;
+        fill-rule: evenodd;
+      }
+
+      .cls-6 {
+        clip-path: url(#clippath-3);
+      }
+
+      .cls-7 {
+        fill: #ef7d53;
+      }
+
+      .cls-3, .cls-4 {
+        clip-rule: evenodd;
+      }
+
+      .cls-8 {
+        clip-path: url(#clippath-2);
+      }
+
+      .cls-4 {
+        clip-path: url(#clippath-1);
+      }
+
+      .cls-9 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <polygon class="cls-3" points=".02 59.18 59.06 59.18 59.06 .02 .02 .02 .02 59.18 .02 59.18"/>
+    </clipPath>
+    <clipPath id="clippath-1">
+      <polygon class="cls-3" points=".02 59.18 59.06 59.18 59.06 .02 .02 .02 .02 59.18 .02 59.18"/>
+    </clipPath>
+    <clipPath id="clippath-2">
+      <polygon class="cls-4" points="6.14 6.14 52.94 6.14 52.94 53.06 6.14 53.06 6.14 6.14 6.14 6.14"/>
+    </clipPath>
+    <clipPath id="clippath-3">
+      <polygon class="cls-2" points="6.14 53.06 52.94 53.06 52.94 6.14 6.14 6.14 6.14 53.06 6.14 53.06"/>
+    </clipPath>
+  </defs>
+  <g id="katman_1" data-name="katman 1">
+    <g>
+      <path class="cls-5" d="M.5,29.6C.5,13.53,13.5.5,29.54.5s29.04,13.03,29.04,29.1-13,29.1-29.04,29.1S.5,45.67.5,29.6h0Z"/>
+      <path class="cls-1" d="M.5,29.6C.5,13.53,13.5.5,29.54.5s29.04,13.03,29.04,29.1-13,29.1-29.04,29.1S.5,45.67.5,29.6h0Z"/>
+      <g class="cls-9">
+        <g class="cls-8">
+          <g class="cls-6">
+            <path class="cls-7" d="M47.81,43.14l-6.02-6.04c-.82-.82-1.93-1.11-2.99-.92l-2.12-2.13c1.88-2.41,2.99-5.51,2.99-8.79,0-7.97-6.5-14.49-14.45-14.49s-14.45,6.52-14.45,14.49,6.5,14.49,14.45,14.49c3.28,0,6.31-1.11,8.77-2.99l2.12,2.13c-.19,1.06.1,2.17.92,2.99l6.02,6.04c.67.68,1.54,1.01,2.41,1.01s1.73-.34,2.41-1.01c1.25-1.35,1.25-3.48-.05-4.78h0ZM25.17,36.81c-6.36,0-11.56-5.22-11.56-11.59s5.2-11.59,11.56-11.59,11.56,5.22,11.56,11.59-5.2,11.59-11.56,11.59h0Z"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

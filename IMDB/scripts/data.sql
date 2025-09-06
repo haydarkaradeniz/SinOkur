@@ -31,6 +31,10 @@ CREATE TABLE imdb_list_data (
 ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4;
 
+ALTER TABLE imdb_list_data ADD title_tr varchar(1000) NULL;
+ALTER TABLE imdb_list_data ADD director varchar(1000) NULL;
+
+
 
 CREATE TABLE imdb_list_data_property (
 	user_id INT UNSIGNED NULL,
@@ -41,6 +45,19 @@ CREATE TABLE imdb_list_data_property (
 )
 ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE imdb_user_list_meta (
+	user_id INT UNSIGNED NULL,
+	list_id varchar(100) NULL,
+    header varchar(100) NULL,
+	update_date TIMESTAMP NULL,
+	create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4;
+
+
+
 
 ----------------------------------------
 
